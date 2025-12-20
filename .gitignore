@@ -5,3 +5,4 @@
 # .NET build outputs
 bin/
 obj/
+*.exe

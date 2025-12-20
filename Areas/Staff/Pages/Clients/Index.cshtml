@@ -1,0 +1,67 @@
+﻿@page
+@model project_pharmacie.Areas.Staff.Pages.Clients.IndexModel
+@{
+    ViewData["Title"] = "Fichier Clients";
+}
+
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-900">Fichier Clients</h1>
+        <p class="text-slate-500 text-sm mt-1">Gérez la fidélité et les offres personnalisées.</p>
+    </div>
+    <a asp-page="./Create" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2.5 px-6 rounded-full shadow-lg transition-all flex items-center gap-2">
+        <span>+ Nouveau Client</span>
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-slate-50 border-b border-slate-100">
+            <tr>
+                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Client</th>
+                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Fidélité</th>
+                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Statut</th>
+                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Offre Active</th>
+                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-50">
+            @foreach (var client in Model.Clients)
+            {
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="p-5">
+                        <div class="font-bold text-slate-900 text-sm">@client.Name</div>
+                        <div class="text-xs text-slate-400">@client.Email</div>
+                    </td>
+                    <td class="p-5 font-medium text-slate-700 text-sm">
+                        @client.LoyaltyPoints pts
+                    </td>
+                    <td class="p-5">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold border
+                                @(client.Status == "Or" ? "bg-amber-50 text-amber-700 border-amber-100" :
+                                                            client.Status == "Argent" ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-white text-slate-400 border-slate-100")">
+                            @client.Status
+                        </span>
+                    </td>
+                    <td class="p-5">
+                        @if (!string.IsNullOrEmpty(client.PersonalizedOffer))
+                        {
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100">
+                                🎁 @client.PersonalizedOffer
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="text-slate-300 text-xs">-</span>
+                        }
+                    </td>
+                    <td class="p-5 text-right space-x-2">
+                        <a asp-page="./Edit" asp-route-id="@client.Id" class="text-xs font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-full transition-all">
+                            Gérer
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

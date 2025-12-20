@@ -1,0 +1,39 @@
+﻿@page
+@model project_pharmacie.Areas.Staff.Pages.Clients.CreateModel
+@{
+    ViewData["Title"] = "Nouveau Client";
+}
+
+<div class="max-w-2xl mx-auto mt-12">
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-slate-900">Nouveau Membre</h1>
+        <p class="text-slate-500 mt-2">Créez une fiche client pour commencer à cumuler des points.</p>
+    </div>
+
+    <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+        <form method="post" class="space-y-6">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nom & Prénom</label>
+                <input asp-for="Client.Name" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none transition font-medium text-lg" placeholder="Ex: Jean Dupont" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
+                    <input asp-for="Client.Email" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none transition" />
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Téléphone</label>
+                    <input asp-for="Client.Phone" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none transition" />
+                </div>
+            </div>
+
+            <div class="pt-6 flex gap-4">
+                <a asp-page="./Index" class="flex-1 py-3.5 text-center text-slate-600 font-bold hover:bg-slate-50 rounded-xl transition">Annuler</a>
+                <button type="submit" class="flex-1 bg-slate-900 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-slate-800 transform hover:-translate-y-0.5 transition-all">
+                    Créer la fiche
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
