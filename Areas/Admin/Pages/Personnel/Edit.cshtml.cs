@@ -15,6 +15,9 @@ public class EditModel : PageModel
 
     public bool Found { get; private set; }
 
+    [TempData]
+    public string? FormError { get; set; }
+
     public List<SelectListItem> RoleOptions { get; } =
         Enum.GetValues<PersonnelRole>()
             .Select(r => new SelectListItem(r.ToString(), r.ToString()))
@@ -48,8 +51,7 @@ public class EditModel : PageModel
         if (existing is null)
         {
             Found = false;
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Personnel introuvable.";
+            FormError = "Personnel introuvable.";
             return Page();
         }
 
@@ -67,8 +69,7 @@ public class EditModel : PageModel
 
         if (!ok)
         {
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = error ?? "Erreur lors de la mise à jour.";
+            FormError = error ?? "Erreur lors de la mise à jour.";
             return Page();
         }
 
