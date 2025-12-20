@@ -27,6 +27,7 @@
                     <th class="px-4 py-3 font-medium">Email</th>
                     <th class="px-4 py-3 font-medium">Rôle</th>
                     <th class="px-4 py-3 font-medium">Statut</th>
+                    <th class="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y">
@@ -45,6 +46,12 @@
                             {
                                 <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">Inactif</span>
                             }
+                        </td>
+                        <td class="px-4 py-3 text-right">
+                            <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@p.Id"
+                               class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                Modifier
+                            </a>
                         </td>
                     </tr>
                 }
