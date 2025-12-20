@@ -29,27 +29,32 @@
         }
         else
         {
-            <form method="post" class="space-y-4">
-                <input type="hidden" asp-for="Id" />
-
+            <form method="post" class="space-y-5">
                 <div>
                     <label class="mb-1 block text-sm font-medium">Nom complet</label>
-                    <input asp-for="Form.FullName"
+                    <input asp-for="Form.FullName" autocomplete="name"
+                           placeholder="Ex: Sara El Amrani"
                            class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Nom affiché dans le tableau du personnel.</p>
                     <span asp-validation-for="Form.FullName" class="text-sm text-red-600"></span>
                 </div>
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium">Email</label>
-                        <input asp-for="Form.Email"
+                        <input asp-for="Form.Email" type="email" autocomplete="email"
+                               placeholder="ex: sara@pharmacie.ma"
                                class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                        <p class="mt-1 text-xs text-zinc-500">Doit être unique.</p>
                         <span asp-validation-for="Form.Email" class="text-sm text-red-600"></span>
                     </div>
+
                     <div>
-                        <label class="mb-1 block text-sm font-medium">Téléphone</label>
-                        <input asp-for="Form.Phone"
+                        <label class="mb-1 block text-sm font-medium">Téléphone (optionnel)</label>
+                        <input asp-for="Form.Phone" type="tel" autocomplete="tel"
+                               placeholder="Ex: 06 12 34 56 78"
                                class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                        <p class="mt-1 text-xs text-zinc-500">Format libre (Maroc: 06/07…).</p>
                     </div>
                 </div>
 
@@ -59,11 +64,21 @@
                         <select asp-for="Form.Role" asp-items="Model.RoleOptions"
                                 class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200">
                         </select>
+                        <p class="mt-1 text-xs text-zinc-500">Définit les permissions.</p>
                     </div>
 
-                    <div class="flex items-center gap-2 pt-7">
-                        <input asp-for="Form.IsActive" class="h-4 w-4 rounded border" />
-                        <label class="text-sm">Compte actif</label>
+                    <div class="flex items-end justify-between rounded-2xl border bg-zinc-50 p-4">
+                        <div>
+                            <p class="text-sm font-medium">Compte actif</p>
+                            <p class="text-xs text-zinc-500">Désactive l’accès sans supprimer le compte.</p>
+                        </div>
+
+                        <!-- Switch simple -->
+                        <label class="relative inline-flex cursor-pointer items-center">
+                            <input asp-for="Form.IsActive" type="checkbox" class="peer sr-only" />
+                            <span class="h-6 w-11 rounded-full bg-zinc-300 peer-checked:bg-zinc-900 transition"></span>
+                            <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white peer-checked:translate-x-5 transition"></span>
+                        </label>
                     </div>
                 </div>
 
