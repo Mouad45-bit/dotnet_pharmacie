@@ -1,0 +1,58 @@
+﻿@page
+@model project_pharmacie.Areas.Admin.Pages.Personnel.IndexModel
+@{
+    ViewData["Title"] = "Personnel";
+}
+
+<div class="mx-auto max-w-6xl px-4 py-6">
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Gestion du personnel</h1>
+            <p class="text-sm text-zinc-500">Liste simple (mock) pour tester l’Area + Tailwind.</p>
+        </div>
+
+        <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+            + Ajouter
+        </button>
+    </div>
+
+    <!-- Test flash -->
+    @{
+        TempData["FlashType"] = "success";
+        TempData["FlashMessage"] = "✅ Tailwind + Partial Flash OK (test).";
+    }
+    <partial name="Shared/_Flash" />
+
+    <div class="overflow-hidden rounded-2xl border bg-white">
+        <table class="min-w-full text-left text-sm">
+            <thead class="bg-zinc-50 text-zinc-600">
+                <tr>
+                    <th class="px-4 py-3 font-medium">Nom</th>
+                    <th class="px-4 py-3 font-medium">Email</th>
+                    <th class="px-4 py-3 font-medium">Rôle</th>
+                    <th class="px-4 py-3 font-medium">Statut</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                @foreach (var p in Model.Items)
+                {
+                    <tr class="hover:bg-zinc-50/50">
+                        <td class="px-4 py-3 font-medium text-zinc-900">@p.FullName</td>
+                        <td class="px-4 py-3 text-zinc-700">@p.Email</td>
+                        <td class="px-4 py-3 text-zinc-700">@p.Role</td>
+                        <td class="px-4 py-3">
+                            @if (p.IsActive)
+                            {
+                                <span class="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Actif</span>
+                            }
+                            else
+                            {
+                                <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">Inactif</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
