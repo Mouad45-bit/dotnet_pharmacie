@@ -48,10 +48,21 @@
                             }
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@p.Id"
-                               class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
-                                Modifier
-                            </a>
+                            <div class="flex justify-end gap-2">
+                                <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@p.Id"
+                                   class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                    Modifier
+                                </a>
+
+                                <form method="post" asp-page-handler="Delete" class="inline">
+                                    <input type="hidden" name="id" value="@p.Id" />
+                                    <button type="submit"
+                                            class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
+                                            onclick="return confirm('Confirmer la suppression de @p.FullName ?');">
+                                        Supprimer
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }
