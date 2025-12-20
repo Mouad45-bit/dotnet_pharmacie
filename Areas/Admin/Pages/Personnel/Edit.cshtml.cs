@@ -15,9 +15,6 @@ public class EditModel : PageModel
 
     public bool Found { get; private set; }
 
-    [TempData]
-    public string? FormError { get; set; }
-
     public List<SelectListItem> RoleOptions { get; } =
         Enum.GetValues<PersonnelRole>()
             .Select(r => new SelectListItem(r.ToString(), r.ToString()))
@@ -29,6 +26,8 @@ public class EditModel : PageModel
         if (p is null)
         {
             Found = false;
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Personnel introuvable.";
             return Page();
         }
 
@@ -51,7 +50,8 @@ public class EditModel : PageModel
         if (existing is null)
         {
             Found = false;
-            FormError = "Personnel introuvable.";
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Personnel introuvable.";
             return Page();
         }
 
@@ -63,13 +63,18 @@ public class EditModel : PageModel
             ModelState.AddModelError("Form.Email", "Email obligatoire.");
 
         if (!ModelState.IsValid)
+        {
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Veuillez corriger les erreurs du formulaire.";
             return Page();
+        }
 
         var (ok, error) = PersonnelStore.Update(Id, Form);
 
         if (!ok)
         {
-            FormError = error ?? "Erreur lors de la mise à jour.";
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = error ?? "Erreur lors de la mise à jour.";
             return Page();
         }
 
