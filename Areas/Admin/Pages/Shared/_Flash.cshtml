@@ -1,0 +1,23 @@
+﻿@{
+    var msg = TempData["FlashMessage"] as string;
+    var type = TempData["FlashType"] as string ?? "success";
+    if (string.IsNullOrWhiteSpace(msg)) { return; }
+
+    var boxClass = type switch
+    {
+        "error" => "border-red-200 bg-red-50 text-red-800",
+        "info" => "border-blue-200 bg-blue-50 text-blue-800",
+        _ => "border-emerald-200 bg-emerald-50 text-emerald-800"
+    };
+}
+
+<div class="mb-4 rounded-xl border p-4 @boxClass">
+    <div class="flex items-start justify-between gap-4">
+        <p class="text-sm font-medium">@msg</p>
+        <button type="button"
+                class="text-sm opacity-70 hover:opacity-100"
+                onclick="this.closest('div.mb-4')?.remove()">
+            ✕
+        </button>
+    </div>
+</div>
