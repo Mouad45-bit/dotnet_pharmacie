@@ -80,7 +80,12 @@
                     @foreach (var p in Model.Items)
                     {
                         <tr class="hover:bg-zinc-50/50">
-                            <td class="px-4 py-3 font-medium text-zinc-900">@p.FullName</td>
+                            <td class="px-4 py-3">
+                                <a asp-area="Admin" asp-page="/Personnel/Details" asp-route-id="@p.Id"
+                                   class="font-medium text-zinc-900 hover:underline">
+                                    @p.FullName
+                                </a>
+                            </td>
                             <td class="px-4 py-3 text-zinc-700">@p.Email</td>
                             <td class="px-4 py-3 text-zinc-700">@p.Role</td>
                             <td class="px-4 py-3">
