@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="~/project_pharmacie.styles.css" asp-append-version="true" />
 </head>
 
-<body class="min-h-screen bg-zinc-50 text-zinc-900">
+<body class="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col">
     @{
         var path = Context.Request.Path.Value ?? "";
         var isAdminArea = path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
@@ -90,12 +90,12 @@
     </header>
 
     <!-- MAIN -->
-    <main class="mx-auto max-w-6xl px-4 py-6">
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         @RenderBody()
     </main>
 
     <!-- FOOTER -->
-    <footer class="border-t bg-white">
+    <footer class="mt-auto border-t bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-zinc-500">
             <span>&copy; @DateTime.Now.Year - project_pharmacie</span>
             <a asp-area="" asp-page="/Privacy" class="hover:text-zinc-700">Privacy</a>
