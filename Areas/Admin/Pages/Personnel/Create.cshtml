@@ -5,16 +5,30 @@
 }
 
 <div class="mx-auto max-w-3xl px-4 py-6">
-    <div class="mb-6">
-        <h1 class="text-2xl font-semibold tracking-tight">Ajouter un personnel</h1>
-        <p class="text-sm text-zinc-500">Créer un nouveau compte (mock store).</p>
+    <!-- Header -->
+    <div class="mb-6 flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Ajouter un personnel</h1>
+            <p class="text-sm text-zinc-500">Créer un nouveau compte.</p>
+        </div>
+
+        <a asp-area="Admin" asp-page="/Personnel/Index"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+            ← Retour
+        </a>
     </div>
 
     <partial name="Shared/_Flash" />
 
+    @if (!string.IsNullOrWhiteSpace(Model.FormError))
+    {
+        <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            @Model.FormError
+        </div>
+    }
+
     <div class="rounded-2xl border bg-white p-5">
         <form method="post" class="space-y-4">
-
             <div>
                 <label class="mb-1 block text-sm font-medium">Nom complet</label>
                 <input asp-for="Form.FullName"
