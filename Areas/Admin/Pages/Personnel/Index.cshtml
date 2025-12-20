@@ -8,12 +8,13 @@
     <div class="mb-6 flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-semibold tracking-tight">Gestion du personnel</h1>
-            <p class="text-sm text-zinc-500">Liste simple (mock) pour tester l’Area + Tailwind.</p>
+            <p class="text-sm text-zinc-500">Liste simple (mock) pour tester.</p>
         </div>
 
-        <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+        <a asp-area="Admin" asp-page="/Personnel/Create"
+           class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
             + Ajouter
-        </button>
+        </a>
     </div>
 
     <partial name="Shared/_Flash" />

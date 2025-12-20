@@ -1,0 +1,68 @@
+﻿@page
+@model project_pharmacie.Areas.Admin.Pages.Personnel.CreateModel
+@{
+    ViewData["Title"] = "Ajouter Personnel";
+}
+
+<div class="mx-auto max-w-3xl px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Ajouter un personnel</h1>
+        <p class="text-sm text-zinc-500">Créer un nouveau compte (mock store).</p>
+    </div>
+
+    <partial name="Shared/_Flash" />
+
+    <div class="rounded-2xl border bg-white p-5">
+        <form method="post" class="space-y-4">
+
+            <div>
+                <label class="mb-1 block text-sm font-medium">Nom complet</label>
+                <input asp-for="Form.FullName"
+                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                <span asp-validation-for="Form.FullName" class="text-sm text-red-600"></span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Email</label>
+                    <input asp-for="Form.Email"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <span asp-validation-for="Form.Email" class="text-sm text-red-600"></span>
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Téléphone</label>
+                    <input asp-for="Form.Phone"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Rôle</label>
+                    <select asp-for="Form.Role" asp-items="Model.RoleOptions"
+                            class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200">
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 pt-7">
+                    <input asp-for="Form.IsActive" class="h-4 w-4 rounded border" />
+                    <label class="text-sm">Compte actif</label>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a asp-area="Admin" asp-page="/Personnel/Index"
+                   class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                    Annuler
+                </a>
+                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
