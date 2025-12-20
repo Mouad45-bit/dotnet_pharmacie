@@ -27,13 +27,18 @@
         </div>
     </div>
 
-    @* Toast Success (TempData) *@
-    @if (TempData["Toast.Success"] is string toast && !string.IsNullOrWhiteSpace(toast))
+    @* Toast Success (TempData) - DEBUG SAFE *@
+    @{
+        var toast = TempData.Peek("Toast.Success") as string;
+    }
+    @if (!string.IsNullOrWhiteSpace(toast))
     {
-        <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div id="toast-success" class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             @toast
         </div>
     }
+
+
 
     <!-- Summary -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -142,5 +147,16 @@
             </tbody>
         </table>
     </div>
+    <script>
+        (function () {
+          const el = document.getElementById("toast-success");
+          if (!el) return;
+          setTimeout(() => {
+            el.style.transition = "opacity 250ms ease";
+            el.style.opacity = "0";
+            setTimeout(() => el.remove(), 300);
+          }, 3000);
+        })();
+    </script>
 
 </div>

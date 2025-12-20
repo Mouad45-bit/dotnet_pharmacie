@@ -1,7 +1,14 @@
-@page
+Ôªø@page
 @model project_pharmacie.Areas.Staff.Pages.Products.IndexModel
 @{
     ViewData["Title"] = "Produits";
+}
+
+@if (TempData["Toast.Success"] is string toast && !string.IsNullOrWhiteSpace(toast))
+{
+    <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        @toast
+    </div>
 }
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -13,7 +20,7 @@
 
         <div class="flex gap-2">
             <a href="/Staff/Dashboard" class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
-                ? Dashboard
+                ‚Üê Dashboard
             </a>
             <a href="/Staff/Products/Create" class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
                 + Ajouter produit
@@ -26,7 +33,7 @@
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="flex-1">
                 <label class="block text-sm font-medium text-gray-700">Recherche</label>
-                <input name="q" value="@Model.Query" placeholder="Nom ou catÈgorie..."
+                <input name="q" value="@Model.Query" placeholder="Nom ou cat√©gorie..."
                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
 
@@ -45,7 +52,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nom</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">CatÈgorie</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Cat√©gorie</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Prix</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Stock</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Seuil</th>
@@ -58,7 +65,7 @@
                 {
                     <tr>
                         <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500">
-                            Aucun produit trouvÈ.
+                            Aucun produit trouv√©.
                         </td>
                     </tr>
                 }
@@ -74,7 +81,7 @@
                             <td class="px-4 py-3 text-sm text-gray-700">@p.UnitPrice.ToString("N2") MAD</td>
                             <td class="px-4 py-3 text-sm text-gray-700">
                                 <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset @badgeCls">
-                                    @badgeText ï @p.Stock
+                                    @badgeText ‚Ä¢ @p.Stock
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-sm text-gray-700">@p.ReorderLevel</td>

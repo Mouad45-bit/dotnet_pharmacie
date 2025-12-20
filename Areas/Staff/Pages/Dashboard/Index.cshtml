@@ -1,8 +1,9 @@
-@page
+ï»¿@page
 @model project_pharmacie.Areas.Staff.Pages.Dashboard.IndexModel
 @{
     ViewData["Title"] = "Staff Dashboard";
 }
+ 
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
@@ -10,7 +11,7 @@
     <div class="flex items-center justify-between">
         <div>
             <h1 class="text-2xl font-semibold text-gray-900">Dashboard (Staff)</h1>
-            <p class="text-sm text-gray-600">Aperçu rapide du stock (données mockées pour l’instant).</p>
+            <p class="text-sm text-gray-600">AperÃ§u rapide du stock (donnÃ©es mockÃ©es pour lâ€™instant).</p>
         </div>
 
         <div class="flex gap-2">
@@ -21,6 +22,9 @@
                 Passer commande
             </a>
         </div>
+    </div>
+    <div class="p-6 bg-emerald-200 rounded-xl text-emerald-900">
+        Tailwind works âœ…
     </div>
 
     <!-- KPIs -->
@@ -33,11 +37,11 @@
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <p class="text-sm text-gray-500">Produits en alerte</p>
             <p class="mt-2 text-2xl font-semibold text-amber-600">@Model.KpiLowStockCount</p>
-            <p class="mt-1 text-xs text-gray-500">stock ? seuil</p>
+            <p class="mt-1 text-xs text-gray-500">stock â‰¤ seuil</p>
         </div>
 
         <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <p class="text-sm text-gray-500">Unités en stock</p>
+            <p class="text-sm text-gray-500">UnitÃ©s en stock</p>
             <p class="mt-2 text-2xl font-semibold text-gray-900">@Model.KpiTotalUnits</p>
         </div>
 
@@ -52,10 +56,10 @@
         <div class="flex items-center justify-between p-4 border-b border-gray-200">
             <div>
                 <h2 class="text-base font-semibold text-gray-900">Produits en rupture / alerte</h2>
-                <p class="text-sm text-gray-600">Liste des produits à surveiller.</p>
+                <p class="text-sm text-gray-600">Liste des produits Ã  surveiller.</p>
             </div>
             <a href="/Staff/Products" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
-                Voir tous les produits ?
+                Voir tous les produits â†’
             </a>
         </div>
 
@@ -64,7 +68,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Produit</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Catégorie</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">CatÃ©gorie</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Stock</th>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Seuil</th>
                         <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Action</th>
@@ -75,7 +79,7 @@
                     {
                         <tr>
                             <td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500">
-                                Aucun produit en alerte ??
+                                Aucun produit en alerte ðŸŽ‰
                             </td>
                         </tr>
                     }
@@ -95,7 +99,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-700">@p.Category</td>
                                 <td class="px-4 py-3 text-sm text-gray-700">
                                     <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset @badge">
-                                        @label • @p.Stock
+                                        @label â€¢ @p.Stock
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-700">@p.ReorderLevel</td>
