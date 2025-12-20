@@ -1,0 +1,18 @@
+﻿@{
+    var path = Context.Request.Path.Value ?? "";
+    bool isPersonnel = path.StartsWith("/Admin/Personnel", StringComparison.OrdinalIgnoreCase);
+    bool isProfile = path.StartsWith("/Admin/Profile", StringComparison.OrdinalIgnoreCase);
+
+    string Tab(bool active) =>
+        active ? "bg-zinc-900 text-white" : "bg-white text-zinc-700 hover:bg-zinc-100";
+}
+
+<a asp-area="Admin" asp-page="/Personnel/Index"
+   class="rounded-xl border px-3 py-2 text-sm font-medium @Tab(isPersonnel)">
+    Personnel
+</a>
+
+<a asp-area="Admin" asp-page="/Profile/Index"
+   class="rounded-xl border px-3 py-2 text-sm font-medium @Tab(isProfile)">
+    Profil
+</a>
