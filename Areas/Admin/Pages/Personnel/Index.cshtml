@@ -5,68 +5,117 @@
 }
 
 <div class="mx-auto max-w-6xl px-4 py-6">
-    <div class="mb-6 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Gestion du personnel</h1>
-            <p class="text-sm text-zinc-500">Liste simple (mock) pour tester.</p>
-        </div>
-
+    <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <h1 class="text-2xl font-semibold tracking-tight">
+            Gestion du personnel
+        </h1>
         <a asp-area="Admin" asp-page="/Personnel/Create"
-           class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+           class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
             + Ajouter
         </a>
     </div>
+    <p class="mb-6 text-sm text-zinc-500">
+        @Model.Total résultat(s)
+        @if (!string.IsNullOrWhiteSpace(Model.Q))
+        {
+            <span> pour “@Model.Q”</span>
+        }
+    </p>
 
     <partial name="Shared/_Flash" />
 
-    <div class="overflow-hidden rounded-2xl border bg-white">
-        <table class="min-w-full text-left text-sm">
-            <thead class="bg-zinc-50 text-zinc-600">
-                <tr>
-                    <th class="px-4 py-3 font-medium">Nom</th>
-                    <th class="px-4 py-3 font-medium">Email</th>
-                    <th class="px-4 py-3 font-medium">Rôle</th>
-                    <th class="px-4 py-3 font-medium">Statut</th>
-                    <th class="px-4 py-3 font-medium text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y">
-                @foreach (var p in Model.Items)
-                {
-                    <tr class="hover:bg-zinc-50/50">
-                        <td class="px-4 py-3 font-medium text-zinc-900">@p.FullName</td>
-                        <td class="px-4 py-3 text-zinc-700">@p.Email</td>
-                        <td class="px-4 py-3 text-zinc-700">@p.Role</td>
-                        <td class="px-4 py-3">
-                            @if (p.IsActive)
-                            {
-                                <span class="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Actif</span>
-                            }
-                            else
-                            {
-                                <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">Inactif</span>
-                            }
-                        </td>
-                        <td class="px-4 py-3 text-right">
-                            <div class="flex justify-end gap-2">
-                                <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@p.Id"
-                                   class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
-                                    Modifier
-                                </a>
+    <!-- Barre de recherche -->
+    <div class="mb-4 rounded-2xl border bg-white p-4">
+        <form method="get" class="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div class="flex-1">
+                <label class="mb-1 block text-xs font-medium text-zinc-600">Recherche</label>
+                <input name="q" value="@Model.Q"
+                       placeholder="Nom, email, téléphone…"
+                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+            </div>
 
-                                <form method="post" asp-page-handler="Delete" class="inline">
-                                    <input type="hidden" name="id" value="@p.Id" />
-                                    <button type="submit"
-                                            class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
-                                            onclick="return confirm('Confirmer la suppression de @p.FullName ?');">
-                                        Supprimer
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+            <div class="flex gap-2 sm:pt-5">
+                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    Rechercher
+                </button>
+
+                <a asp-area="Admin" asp-page="/Personnel/Index"
+                   class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+                    Réinitialiser
+                </a>
+            </div>
+        </form>
     </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <!-- Empty state -->
+        <div class="rounded-2xl border bg-white p-10 text-center">
+            <p class="text-base font-semibold">Aucun personnel trouvé</p>
+            <p class="mt-1 text-sm text-zinc-500">
+                Essaie une autre recherche ou ajoute un nouveau personnel.
+            </p>
+            <div class="mt-4">
+                <a asp-area="Admin" asp-page="/Personnel/Create"
+                   class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    + Ajouter
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-hidden rounded-2xl border bg-white">
+            <table class="min-w-full text-left text-sm">
+                <thead class="bg-zinc-50 text-zinc-600">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Nom</th>
+                        <th class="px-4 py-3 font-medium">Email</th>
+                        <th class="px-4 py-3 font-medium">Rôle</th>
+                        <th class="px-4 py-3 font-medium">Statut</th>
+                        <th class="px-4 py-3 font-medium text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @foreach (var p in Model.Items)
+                    {
+                        <tr class="hover:bg-zinc-50/50">
+                            <td class="px-4 py-3 font-medium text-zinc-900">@p.FullName</td>
+                            <td class="px-4 py-3 text-zinc-700">@p.Email</td>
+                            <td class="px-4 py-3 text-zinc-700">@p.Role</td>
+                            <td class="px-4 py-3">
+                                @if (p.IsActive)
+                                {
+                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Actif</span>
+                                }
+                                else
+                                {
+                                    <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">Inactif</span>
+                                }
+                            </td>
+
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@p.Id"
+                                       class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                        Modifier
+                                    </a>
+
+                                    <form method="post" asp-page-handler="Delete" class="inline">
+                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <input type="hidden" name="q" value="@Model.Q" />
+                                        <button type="submit"
+                                                class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
+                                                onclick="return confirm('Confirmer la suppression de @p.FullName ?');">
+                                            Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>

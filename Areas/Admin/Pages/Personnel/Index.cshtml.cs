@@ -8,24 +8,26 @@ public class IndexModel : PageModel
 {
     public List<Services.Personnel> Items { get; private set; } = new();
 
+    [BindProperty(SupportsGet = true)]
+    public string? Q { get; set; }
+
+    public int Total => Items.Count;
+
     public void OnGet()
     {
-        Items = PersonnelStore.All();
+        Items = PersonnelStore.All(Q);
     }
 
     public IActionResult OnPostDelete(string id)
     {
         var (ok, error) = PersonnelStore.Delete(id);
 
-        if (!ok)
-        {
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = error ?? "Erreur lors de la suppression.";
-            return RedirectToPage();
-        }
+        TempData["FlashType"] = ok ? "success" : "error";
+        TempData["FlashMessage"] = ok
+            ? "Personnel supprimé avec succès."
+            : (error ?? "Erreur lors de la suppression.");
 
-        TempData["FlashType"] = "success";
-        TempData["FlashMessage"] = "Personnel supprimé avec succès.";
-        return RedirectToPage();
+        // garder la recherche après delete
+        return RedirectToPage(new { q = Q });
     }
 }
