@@ -1,0 +1,91 @@
+﻿@page "{id}"
+@model project_pharmacie.Areas.Admin.Pages.Personnel.DetailsModel
+@{
+    ViewData["Title"] = "Détail Personnel";
+}
+
+<div class="mx-auto max-w-4xl px-4 py-6">
+    <div class="mb-6 flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Détail du personnel</h1>
+            <p class="text-sm text-zinc-500">Informations du compte.</p>
+        </div>
+
+        <a asp-area="Admin" asp-page="/Personnel/Index"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+            ← Retour
+        </a>
+    </div>
+
+    <partial name="Shared/_Flash" />
+
+    @if (!Model.Found || Model.Item is null)
+    {
+        <div class="rounded-2xl border bg-white p-6">
+            <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                Personnel introuvable.
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="rounded-2xl border bg-white p-6">
+            <div class="mb-4 flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-semibold">@Model.Item.FullName</h2>
+                    <p class="text-sm text-zinc-500">@Model.Item.Email</p>
+                </div>
+
+                @if (Model.Item.IsActive)
+                {
+                    <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        Actif
+                    </span>
+                }
+                else
+                {
+                    <span class="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700">
+                        Inactif
+                    </span>
+                }
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div class="rounded-2xl border bg-zinc-50 p-4">
+                    <p class="text-xs font-medium text-zinc-500">Téléphone</p>
+                    <p class="mt-1 text-sm font-semibold text-zinc-900">
+                        @(string.IsNullOrWhiteSpace(Model.Item.Phone) ? "—" : Model.Item.Phone)
+                    </p>
+                </div>
+
+                <div class="rounded-2xl border bg-zinc-50 p-4">
+                    <p class="text-xs font-medium text-zinc-500">Rôle</p>
+                    <p class="mt-1 text-sm font-semibold text-zinc-900">@Model.Item.Role</p>
+                </div>
+
+                <div class="rounded-2xl border bg-zinc-50 p-4 sm:col-span-2">
+                    <p class="text-xs font-medium text-zinc-500">Créé le</p>
+                    <p class="mt-1 text-sm font-semibold text-zinc-900">
+                        @Model.Item.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a asp-area="Admin" asp-page="/Personnel/Edit" asp-route-id="@Model.Item.Id"
+                   class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+                    Modifier
+                </a>
+
+                <form method="post" asp-page-handler="Delete" class="inline">
+                    <input type="hidden" name="id" value="@Model.Item.Id" />
+                    <button type="submit"
+                            class="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+                            onclick="return confirm('Confirmer la suppression de @Model.Item.FullName ?');">
+                        Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

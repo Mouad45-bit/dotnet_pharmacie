@@ -1,0 +1,45 @@
+﻿@{
+    var msg = TempData["FlashMessage"] as string;
+    var type = TempData["FlashType"] as string ?? "success"; // success | error | info
+    if (string.IsNullOrWhiteSpace(msg)) { return; }
+
+    var styles = type switch
+    {
+        "error" => new { Box = "border-red-200 bg-red-50 text-red-800", Badge = "bg-red-100 text-red-800", Label = "Erreur" },
+        "info" => new { Box = "border-blue-200 bg-blue-50 text-blue-800", Badge = "bg-blue-100 text-blue-800", Label = "Info" },
+        _ => new { Box = "border-emerald-200 bg-emerald-50 text-emerald-800", Badge = "bg-emerald-100 text-emerald-800", Label = "Succès" }
+    };
+}
+
+<div id="flash"
+     class="mb-4 rounded-2xl border p-4 @styles.Box"
+     role="status"
+     aria-live="polite">
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <span class="mt-0.5 inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold @styles.Badge">
+                @styles.Label
+            </span>
+            <p class="text-sm font-medium leading-relaxed">@msg</p>
+        </div>
+
+        <button type="button"
+                class="rounded-lg px-2 py-1 text-sm opacity-70 hover:bg-white/50 hover:opacity-100"
+                aria-label="Fermer"
+                onclick="document.getElementById('flash')?.remove()">
+            ✕
+        </button>
+    </div>
+</div>
+
+<script>
+    (function () {
+        var el = document.getElementById('flash');
+        if (!el) return;
+
+        // auto-dismiss after 3 seconds
+        setTimeout(function () {
+            if (el && el.parentNode) el.remove();
+        }, 3000);
+    })();
+</script>
