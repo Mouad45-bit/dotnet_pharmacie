@@ -1,15 +1,24 @@
 {
   "name": "project_pharmacie",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "build:css": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/site.css --minify",
     "watch:css": "tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/site.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mouad45-bit/dotnet_pharmacie.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "bugs": {
+    "url": "https://github.com/Mouad45-bit/dotnet_pharmacie/issues"
+  },
+  "homepage": "https://github.com/Mouad45-bit/dotnet_pharmacie#readme",
   "devDependencies": {
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",

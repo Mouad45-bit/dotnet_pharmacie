@@ -1,0 +1,103 @@
+﻿@page
+@model project_pharmacie.Areas.Staff.Pages.Orders.CreateModel
+@{
+    ViewData["Title"] = "Passer commande";
+}
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <div class="flex items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold text-gray-900">Passer une commande</h1>
+            <p class="text-sm text-gray-600">Sélection fournisseur + produit + quantité (mock).</p>
+        </div>
+
+        <div class="flex gap-2">
+            <a href="/Staff/Suppliers"
+               class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
+                ← Fournisseurs
+            </a>
+            <a href="/Staff/Orders/History"
+               class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
+                Historique
+            </a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    <form method="post" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-5">
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Fournisseur</label>
+            <select asp-for="Form.SupplierId"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">-- Choisir un fournisseur --</option>
+                @foreach (var s in Model.Suppliers)
+                {
+                    <option value="@s.Id">
+                        @s.Name (@s.Rating.ToString("N1")/5)
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="Form.SupplierId" class="text-xs text-red-600"></span>
+            <p class="mt-1 text-xs text-gray-500">Liste triée par note (desc).</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Produit</label>
+            <select asp-for="Form.ProductId"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">-- Choisir un produit --</option>
+                @foreach (var p in Model.Products)
+                {
+                    <option value="@p.Id">
+                        @p.Name (stock: @p.Stock)
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="Form.ProductId" class="text-xs text-red-600"></span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Quantité</label>
+                <input asp-for="Form.Quantity" type="number" min="1"
+                       class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                <span asp-validation-for="Form.Quantity" class="text-xs text-red-600"></span>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Note (optionnel)</label>
+                <textarea asp-for="Form.Note" rows="2"
+                          placeholder="Ex: livraison urgente, matin..."
+                          class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+            </div>
+        </div>
+
+        <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <strong>Confirmation :</strong> vérifie fournisseur + produit + quantité avant d’envoyer.
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+            <a href="/Staff/Products"
+               class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
+                Voir produits
+            </a>
+
+            <button type="submit"
+                    onclick="return confirm('Confirmer la création de la commande ?');"
+                    class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                Créer commande
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
