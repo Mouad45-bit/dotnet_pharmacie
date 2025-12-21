@@ -8,3 +8,4 @@ node_modules/
 # .NET build outputs
 bin/
 obj/
+*.exe

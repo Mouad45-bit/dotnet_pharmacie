@@ -1,0 +1,47 @@
+﻿@page
+@model project_pharmacie.Areas.Staff.Pages.Sales.CreateModel
+@{
+    ViewData["Title"] = "Nouvelle Vente";
+}
+
+<div class="max-w-2xl mx-auto mt-6">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-slate-900">Enregistrer une Vente</h1>
+        <p class="text-slate-500 text-sm mt-1">Saisissez les informations pour créer une nouvelle transaction.</p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden p-8">
+        <form method="post" class="space-y-6">
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Client</label>
+                <input asp-for="NewSale.CustomerName" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="Nom complet (ex: Jean Dupont)" />
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Médicament</label>
+                <input asp-for="NewSale.DrugName" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all placeholder-slate-400" placeholder="Nom du produit" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Quantité</label>
+                    <input asp-for="NewSale.Quantity" type="number" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Prix Total (€)</label>
+                    <input asp-for="NewSale.TotalPrice" type="number" step="0.01" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all" />
+                </div>
+            </div>
+
+            <div class="pt-6 flex items-center justify-end gap-4 border-t border-slate-50 mt-6">
+                <a asp-page="./History" class="text-sm font-medium text-slate-500 hover:text-slate-900 px-4 py-2 rounded-full hover:bg-slate-50 transition-colors">
+                    Annuler
+                </a>
+                <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all">
+                    Valider la vente
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
