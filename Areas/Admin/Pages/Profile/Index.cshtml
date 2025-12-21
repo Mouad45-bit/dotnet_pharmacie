@@ -1,0 +1,47 @@
+﻿@page
+@model project_pharmacie.Areas.Admin.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "Profil Admin";
+}
+
+<div class="mx-auto max-w-4xl px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Profil</h1>
+        <p class="text-sm text-zinc-500">Informations du compte administrateur (mock).</p>
+    </div>
+
+    <div class="rounded-2xl border bg-white p-5">
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Nom</p>
+                <p class="mt-1 text-sm font-semibold">@Model.AdminName</p>
+            </div>
+
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Email</p>
+                <p class="mt-1 text-sm font-semibold">@Model.AdminEmail</p>
+            </div>
+
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Rôle</p>
+                <p class="mt-1 text-sm font-semibold">ADMIN</p>
+            </div>
+
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Dernière connexion</p>
+                <p class="mt-1 text-sm font-semibold">@Model.LastLogin</p>
+            </div>
+        </div>
+
+        <div class="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+            Plus tard : brancher ces infos sur l’auth (Identity / Cookies / Claims).
+        </div>
+
+        <div class="mt-5 flex justify-end">
+            <a asp-area="Admin" asp-page="/Personnel/Index"
+               class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+                Retour Personnel
+            </a>
+        </div>
+    </div>
+</div>

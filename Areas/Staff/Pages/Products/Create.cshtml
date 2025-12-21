@@ -1,0 +1,54 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
+
+namespace project_pharmacie.Areas.Staff.Pages.Products;
+
+public class CreateModel : PageModel
+{
+    [BindProperty]
+    public ProductForm Form { get; set; } = new();
+
+    public string? ErrorMessage { get; set; }
+
+    public void OnGet()
+    {
+        // Nothing for now
+    }
+
+    public IActionResult OnPost()
+    {
+        // Basic server-side validation
+        if (!ModelState.IsValid)
+        {
+            ErrorMessage = "Veuillez corriger les erreurs du formulaire.";
+            return Page();
+        }
+
+        // Mock "save" (replace later by a service/DB)
+        // Example: _productService.Create(Form);
+
+        TempData["Toast.Success"] = $"Produit créé (mock) : {Form.Name}.";
+        return RedirectToPage("/Products/Index", new { area = "Staff" });
+    }
+
+    public class ProductForm
+    {
+        [Required(ErrorMessage = "Le nom est requis.")]
+        [StringLength(80, ErrorMessage = "Max 80 caractères.")]
+        public string Name { get; set; } = "";
+
+        [Required(ErrorMessage = "La catégorie est requise.")]
+        [StringLength(60, ErrorMessage = "Max 60 caractères.")]
+        public string Category { get; set; } = "";
+
+        [Range(0, 999999, ErrorMessage = "Prix invalide.")]
+        public decimal UnitPrice { get; set; }
+
+        [Range(0, 999999, ErrorMessage = "Stock invalide.")]
+        public int Stock { get; set; }
+
+        [Range(0, 999999, ErrorMessage = "Seuil invalide.")]
+        public int ReorderLevel { get; set; }
+    }
+}

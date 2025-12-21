@@ -1,11 +1,13 @@
-﻿module.exports = {
-    content: [
-        './Pages/**/*.cshtml',
-        './Views/**/*.cshtml',
-        './Areas/**/*.cshtml'  /* <-- C'est cette ligne qui manquait ! */
-    ],
-    theme: {
-        extend: {},
-    },
-    plugins: [],
-}
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./Pages/**/*.{cshtml,cs}",
+    "./Areas/**/*.{cshtml,cs}",
+    "./Views/**/*.cshtml",
+    "./wwwroot/**/*.{html,js}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
