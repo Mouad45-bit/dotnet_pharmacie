@@ -4,61 +4,83 @@
     ViewData["Title"] = "Mon Profil";
 }
 
-<div class="max-w-4xl mx-auto mt-10">
+<div class="mx-auto max-w-4xl px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Profil</h1>
+        <p class="text-sm text-zinc-500">Informations du compte.</p>
+    </div>
 
-    @if (!string.IsNullOrEmpty(Model.Message))
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
     {
-        <div class="mb-6 p-4 bg-green-100 text-green-700 rounded-lg border border-green-200 shadow-sm">
-            ✅ @Model.Message
+        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            @Model.Message
         </div>
     }
 
-    <h1 class="text-3xl font-bold text-slate-900 mb-2">Mon Profil</h1>
-    <p class="text-slate-500 mb-8">Gérez vos informations personnelles et votre sécurité.</p>
+    <div class="rounded-2xl border bg-white p-5">
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Nom</p>
+                <p class="mt-1 text-sm font-semibold">@Model.Username</p>
+            </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Email</p>
+                <p class="mt-1 text-sm font-semibold">@Model.Email</p>
+            </div>
 
-        <div class="md:col-span-1">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <div class="w-24 h-24 bg-slate-900 text-white rounded-full flex items-center justify-center text-3xl font-bold mx-auto mb-4">
-                    @Model.Username.Substring(0, 1)
-                </div>
-                <h2 class="text-xl font-bold text-slate-900">@Model.Username</h2>
-                <span class="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
-                    @Model.Role
-                </span>
-                <p class="text-slate-400 text-sm mt-4">ID: @Model.EmployeeId</p>
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Rôle</p>
+                <p class="mt-1 text-sm font-semibold">@Model.Role</p>
+            </div>
+
+            <div class="rounded-xl border bg-zinc-50 p-4">
+                <p class="text-xs text-zinc-500">Identifiant</p>
+                <p class="mt-1 text-sm font-semibold">@Model.EmployeeId</p>
             </div>
         </div>
 
-        <div class="md:col-span-2">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-                <h3 class="text-lg font-bold text-slate-900 mb-6 border-b pb-2">Sécurité du compte</h3>
+        <div class="mt-5 rounded-xl border bg-white p-4">
+            <h2 class="text-sm font-semibold text-zinc-900">Sécurité du compte</h2>
+            <p class="mt-1 text-xs text-zinc-500">Changer le mot de passe.</p>
 
-                <form method="post" class="space-y-5">
+            <form method="post" class="mt-4 space-y-5">
+                <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Email professionnel</label>
-                        <input type="text" value="@Model.Email" disabled class="w-full p-3 rounded-lg bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed" />
+                        <label class="mb-1 block text-sm font-medium">Mot de passe actuel</label>
+                        <input asp-for="CurrentPassword" type="password"
+                               class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                        <span asp-validation-for="CurrentPassword" class="text-sm text-red-600"></span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Mot de passe actuel</label>
-                            <input asp-for="CurrentPassword" type="password" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Nouveau mot de passe</label>
-                            <input asp-for="NewPassword" type="password" class="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none" />
-                        </div>
+                    <div>
+                        <label class="mb-1 block text-sm font-medium">Nouveau mot de passe</label>
+                        <input asp-for="NewPassword" type="password"
+                               class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                        <span asp-validation-for="NewPassword" class="text-sm text-red-600"></span>
                     </div>
+                </div>
 
-                    <div class="pt-4 text-right">
-                        <button type="submit" class="bg-slate-900 text-white font-bold py-3 px-6 rounded-lg hover:bg-slate-800 transition shadow-lg">
-                            Mettre à jour
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <button type="submit"
+                            class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                        Mettre à jour
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="mt-5 flex justify-end">
+            <a asp-area="Staff" asp-page="/Dashboard/Index"
+               class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+                Retour Dashboard
+            </a>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
