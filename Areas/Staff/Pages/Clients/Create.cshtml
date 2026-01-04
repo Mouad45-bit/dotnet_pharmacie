@@ -4,36 +4,68 @@
     ViewData["Title"] = "Nouveau Client";
 }
 
-<div class="max-w-2xl mx-auto mt-12">
-    <div class="text-center mb-10">
-        <h1 class="text-3xl font-bold text-slate-900">Nouveau Membre</h1>
-        <p class="text-slate-500 mt-2">Créez une fiche client pour commencer à cumuler des points.</p>
+<div class="mx-auto max-w-3xl px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Ajouter un client</h1>
+            <p class="text-sm text-zinc-500">Créer une nouvelle fiche client.</p>
+        </div>
+
+        <a asp-area="Staff" asp-page="/Clients/Index"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+            ← Retour
+        </a>
     </div>
 
-    <div class="bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
-        <form method="post" class="space-y-6">
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
+
+    <div class="rounded-2xl border bg-white p-5">
+        <form method="post" class="space-y-5">
+
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nom & Prénom</label>
-                <input asp-for="Client.Name" class="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none transition font-medium text-lg" placeholder="Ex: Jean Dupont" />
+                <label class="mb-1 block text-sm font-medium">Nom complet</label>
+                <input asp-for="Client.Name" autocomplete="name"
+                       placeholder="Ex: Jean Dupont"
+                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                <p class="mt-1 text-xs text-zinc-500">Nom affiché dans le fichier clients.</p>
+                <span asp-validation-for="Client.Name" class="text-sm text-red-600"></span>
             </div>
 
-            <div class="grid grid-cols-2 gap-6">
+            <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
-                    <input asp-for="Client.Email" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none transition" />
+                    <label class="mb-1 block text-sm font-medium">Email</label>
+                    <input asp-for="Client.Email" type="email" autocomplete="email"
+                           placeholder="ex: client@exemple.ma"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Doit être valide.</p>
+                    <span asp-validation-for="Client.Email" class="text-sm text-red-600"></span>
                 </div>
+
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Téléphone</label>
-                    <input asp-for="Client.Phone" class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none transition" />
+                    <label class="mb-1 block text-sm font-medium">Téléphone (optionnel)</label>
+                    <input asp-for="Client.Phone" type="tel" autocomplete="tel"
+                           placeholder="Ex: 06 12 34 56 78"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Format libre (Maroc: 06/07…).</p>
+                    <span asp-validation-for="Client.Phone" class="text-sm text-red-600"></span>
                 </div>
             </div>
 
-            <div class="pt-6 flex gap-4">
-                <a asp-page="./Index" class="flex-1 py-3.5 text-center text-slate-600 font-bold hover:bg-slate-50 rounded-xl transition">Annuler</a>
-                <button type="submit" class="flex-1 bg-slate-900 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-slate-800 transform hover:-translate-y-0.5 transition-all">
-                    Créer la fiche
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a asp-area="Staff" asp-page="/Clients/Index"
+                   class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                    Annuler
+                </a>
+                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    Enregistrer
                 </button>
             </div>
+
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
