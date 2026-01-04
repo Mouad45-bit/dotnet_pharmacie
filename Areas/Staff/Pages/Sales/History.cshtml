@@ -1,68 +1,173 @@
 ﻿@page
 @model project_pharmacie.Areas.Staff.Pages.Sales.HistoryModel
 @{
-    ViewData["Title"] = "Historique des Ventes";
+    ViewData["Title"] = "Historique ventes";
 }
 
-<div class="mb-8 flex items-center justify-between">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900">Historique des ventes</h1>
-        <p class="text-slate-500 text-sm mt-1">Liste simple des transactions récentes.</p>
+<div class="mx-auto max-w-6xl px-4 py-6">
+
+    <!-- Header (même style que Orders/History) -->
+    <div class="mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">
+                Historique des ventes
+            </h1>
+        </div>
+
+        <div class="flex gap-2">
+            <a asp-area="Staff" asp-page="/Dashboard/Index"
+               class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+                ← Dashboard
+            </a>
+
+            <a asp-area="Staff" asp-page="/Sales/Create"
+               class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                + Nouvelle vente
+            </a>
+        </div>
     </div>
-    <a asp-page="./Create" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2.5 px-6 rounded-full shadow-sm transition-all flex items-center gap-2">
-        + Nouvelle Vente
-    </a>
-</div>
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-    <table class="w-full text-left border-collapse">
-        <thead>
-            <tr class="border-b border-slate-100">
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Client</th>
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Médicament</th>
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</th>
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide text-center">Statut</th>
-                <th class="p-5 text-xs font-semibold text-slate-500 uppercase tracking-wide text-right">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-50">
-            @foreach (var sale in Model.Sales)
-            {
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="p-5 text-sm text-slate-900 font-medium">
-                        @sale.Date.ToString("dd/MM/yyyy")
-                        <span class="block text-xs text-slate-400 font-normal">@sale.Date.ToString("HH:mm")</span>
-                    </td>
-                    <td class="p-5 text-sm text-slate-600">
-                        @sale.CustomerName
-                    </td>
-                    <td class="p-5 text-sm text-slate-600">
-                        <span class="font-medium text-slate-900">@sale.DrugName</span>
-                        <span class="text-slate-400 text-xs ml-1">x @sale.Quantity</span>
-                    </td>
-                    <td class="p-5 text-sm font-bold text-slate-900">
-                        @sale.TotalPrice.ToString("C")
-                    </td>
-                    <td class="p-5 text-center">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-100">
-                            Payé
-                        </span>
-                    </td>
-                    <td class="p-5 text-right space-x-2">
-                        <button class="text-xs font-medium text-slate-500 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-3 py-1 rounded-full transition-all">
-                            Modifier
-                        </button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <p class="mb-6 text-sm text-zinc-500">
+        Liste des ventes (données mock pour l’instant).
+        @if (!string.IsNullOrWhiteSpace(Model.Query))
+        {
+            <span>Recherche : “@Model.Query”.</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.StatusFilter))
+        {
+            <span>Statut : @Model.StatusFilter.</span>
+        }
+    </p>
 
-    @if (!Model.Sales.Any())
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
+
+    @if (TempData["Toast.Success"] is string toast && !string.IsNullOrWhiteSpace(toast))
     {
-        <div class="p-12 text-center">
-            <p class="text-slate-400 text-sm">Aucune donnée disponible.</p>
+        <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            @toast
         </div>
     }
+
+    <!-- Barre de recherche (4/1) -->
+    <div class="mb-4 rounded-2xl border bg-white p-4">
+        <form method="get" class="w-full flex flex-col gap-3 sm:flex-row sm:items-end">
+
+            <div class="flex-1 flex flex-col gap-3 sm:flex-row">
+                <!-- Recherche : 4 parts -->
+                <div class="sm:flex-[4_1_0%]">
+                    <label class="mb-1 block text-xs font-medium text-zinc-600">Recherche</label>
+                    <input name="q" value="@Model.Query"
+                           placeholder="Client ou médicament..."
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                </div>
+
+                <!-- Statut : 1 part -->
+                <div class="sm:flex-[1_1_0%] min-w-[180px]">
+                    <label class="mb-1 block text-xs font-medium text-zinc-600">Statut</label>
+                    <select name="status"
+                            class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200">
+                        <option value="" selected="@(string.IsNullOrWhiteSpace(Model.StatusFilter))">Tous</option>
+                        <option value="PAID" selected="@(Model.StatusFilter == "PAID")">Payée</option>
+                        <option value="PENDING" selected="@(Model.StatusFilter == "PENDING")">En attente</option>
+                        <option value="CANCELLED" selected="@(Model.StatusFilter == "CANCELLED")">Annulée</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-2 shrink-0">
+                <button type="submit"
+                        class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 whitespace-nowrap">
+                    Rechercher
+                </button>
+
+                <a asp-area="Staff" asp-page="/Sales/History"
+                   class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50 whitespace-nowrap">
+                    Réinitialiser
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+    @if (Model.Sales == null || Model.Sales.Count == 0)
+    {
+        <!-- Empty state (même style que Orders/History) -->
+        <div class="rounded-2xl border bg-white p-10 text-center">
+            <p class="text-base font-semibold">Aucune vente trouvée</p>
+            <p class="mt-1 text-sm text-zinc-500">
+                Essaie une autre recherche, change le statut, ou crée une nouvelle vente.
+            </p>
+            <div class="mt-4">
+                <a asp-area="Staff" asp-page="/Sales/Create"
+                   class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    + Nouvelle vente
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="overflow-hidden rounded-2xl border bg-white">
+            <table class="min-w-full text-left text-sm">
+                <thead class="bg-zinc-50 text-zinc-600">
+                    <tr>
+                        <th class="px-4 py-3 font-medium">Date</th>
+                        <th class="px-4 py-3 font-medium">Client</th>
+                        <th class="px-4 py-3 font-medium">Médicament</th>
+                        <th class="px-4 py-3 font-medium">Qté</th>
+                        <th class="px-4 py-3 font-medium">Total</th>
+                        <th class="px-4 py-3 font-medium">Statut</th>
+                        <th class="px-4 py-3 font-medium text-right">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y">
+                    @foreach (var s in Model.Sales)
+                    {
+                        // Si tu as une méthode GetStatusBadge comme Orders :
+                        var badge = Model.GetStatusBadge(s.Status);
+
+                        <tr class="hover:bg-zinc-50/50">
+                            <td class="px-4 py-3 text-zinc-700">
+                                @s.Date.ToString("yyyy-MM-dd HH:mm")
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <span class="font-medium text-zinc-900">@s.CustomerName</span>
+                            </td>
+
+                            <td class="px-4 py-3 text-zinc-700">
+                                @s.DrugName
+                            </td>
+
+                            <td class="px-4 py-3 text-zinc-700">
+                                @s.Quantity
+                            </td>
+
+                            <td class="px-4 py-3 text-zinc-700">
+                                @s.TotalPrice.ToString("N2")
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <span class="rounded-full px-2 py-1 text-xs font-medium @badge.cls">
+                                    @badge.label
+                                </span>
+                            </td>
+
+                            <td class="px-4 py-3 text-right">
+                                <div class="flex justify-end gap-2">
+                                    <a asp-area="Staff" asp-page="/Sales/Create" asp-route-customerHint="@s.CustomerName"
+                                       class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                        Refaire
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    }
+
 </div>

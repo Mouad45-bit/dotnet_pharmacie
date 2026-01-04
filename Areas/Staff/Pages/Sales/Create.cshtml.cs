@@ -8,7 +8,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 	public class CreateModel : PageModel
 	{
 		[BindProperty]
-		public Sale NewSale { get; set; } = new Sale();
+		public Models.Sales NewSale { get; set; } = new Models.Sales();
 
 		public void OnGet()
 		{
