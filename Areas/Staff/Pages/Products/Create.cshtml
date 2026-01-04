@@ -1,54 +1,98 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
+Ôªø@page
+@model project_pharmacie.Areas.Staff.Pages.Products.CreateModel
+@{
+    ViewData["Title"] = "Nouveau Produit";
+}
 
-namespace project_pharmacie.Areas.Staff.Pages.Products;
+<div class="mx-auto max-w-3xl px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Ajouter un produit</h1>
+            <p class="text-sm text-zinc-500">Cr√©er une nouvelle fiche produit.</p>
+        </div>
 
-public class CreateModel : PageModel
-{
-    [BindProperty]
-    public ProductForm Form { get; set; } = new();
+        <a asp-area="Staff" asp-page="/Products/Index"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+            ‚Üê Retour
+        </a>
+    </div>
 
-    public string? ErrorMessage { get; set; }
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
 
-    public void OnGet()
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        // Nothing for now
+        <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            @Model.ErrorMessage
+        </div>
     }
 
-    public IActionResult OnPost()
-    {
-        // Basic server-side validation
-        if (!ModelState.IsValid)
-        {
-            ErrorMessage = "Veuillez corriger les erreurs du formulaire.";
-            return Page();
-        }
+    <div class="rounded-2xl border bg-white p-5">
+        <form method="post" class="space-y-5">
 
-        // Mock "save" (replace later by a service/DB)
-        // Example: _productService.Create(Form);
+            <div>
+                <label class="mb-1 block text-sm font-medium">Nom</label>
+                <input asp-for="Form.Name" autocomplete="off"
+                       placeholder="Ex: Doliprane 1g"
+                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                <p class="mt-1 text-xs text-zinc-500">Nom affich√© dans la liste des produits.</p>
+                <span asp-validation-for="Form.Name" class="text-sm text-red-600"></span>
+            </div>
 
-        TempData["Toast.Success"] = $"Produit crÈÈ (mock) : {Form.Name}.";
-        return RedirectToPage("/Products/Index", new { area = "Staff" });
-    }
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Cat√©gorie</label>
+                    <input asp-for="Form.Category" autocomplete="off"
+                           placeholder="Ex: Antalgique"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Utilis√©e pour le filtrage et le classement.</p>
+                    <span asp-validation-for="Form.Category" class="text-sm text-red-600"></span>
+                </div>
 
-    public class ProductForm
-    {
-        [Required(ErrorMessage = "Le nom est requis.")]
-        [StringLength(80, ErrorMessage = "Max 80 caractËres.")]
-        public string Name { get; set; } = "";
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Prix (MAD)</label>
+                    <input asp-for="Form.UnitPrice" type="number" step="0.01" min="0"
+                           placeholder="Ex: 18.50"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Prix de vente unitaire.</p>
+                    <span asp-validation-for="Form.UnitPrice" class="text-sm text-red-600"></span>
+                </div>
+            </div>
 
-        [Required(ErrorMessage = "La catÈgorie est requise.")]
-        [StringLength(60, ErrorMessage = "Max 60 caractËres.")]
-        public string Category { get; set; } = "";
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Stock</label>
+                    <input asp-for="Form.Stock" type="number" min="0"
+                           placeholder="Ex: 0"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Quantit√© disponible en magasin.</p>
+                    <span asp-validation-for="Form.Stock" class="text-sm text-red-600"></span>
+                </div>
 
-        [Range(0, 999999, ErrorMessage = "Prix invalide.")]
-        public decimal UnitPrice { get; set; }
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Seuil d‚Äôalerte</label>
+                    <input asp-for="Form.ReorderLevel" type="number" min="0"
+                           placeholder="Ex: 5"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Alerte si stock ‚â§ seuil.</p>
+                    <span asp-validation-for="Form.ReorderLevel" class="text-sm text-red-600"></span>
+                </div>
+            </div>
 
-        [Range(0, 999999, ErrorMessage = "Stock invalide.")]
-        public int Stock { get; set; }
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a asp-area="Staff" asp-page="/Products/Index"
+                   class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                    Annuler
+                </a>
+                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    Enregistrer
+                </button>
+            </div>
 
-        [Range(0, 999999, ErrorMessage = "Seuil invalide.")]
-        public int ReorderLevel { get; set; }
-    }
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
 }
