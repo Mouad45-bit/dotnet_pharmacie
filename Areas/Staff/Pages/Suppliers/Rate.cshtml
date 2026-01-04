@@ -4,35 +4,40 @@
     ViewData["Title"] = "Noter fournisseur";
 }
 
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-
-    <div class="flex items-start justify-between gap-4">
+<div class="mx-auto max-w-3xl px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex items-start justify-between gap-3">
         <div>
-            <h1 class="text-2xl font-semibold text-gray-900">Noter un fournisseur</h1>
-            <p class="text-sm text-gray-600">Évaluation (mock) — prêt à brancher sur DB/service.</p>
+            <h1 class="text-2xl font-semibold tracking-tight">Noter un fournisseur</h1>
+            <p class="text-sm text-zinc-500">Évaluation.</p>
         </div>
 
-        <a href="/Staff/Suppliers"
-           class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
+        <a href="#"
+           onclick="history.back(); return false;"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
             ← Retour
         </a>
     </div>
 
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
+
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             @Model.ErrorMessage
         </div>
     }
 
     @if (!Model.Found)
     {
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 class="text-base font-semibold text-gray-900">Fournisseur introuvable</h2>
-            <p class="mt-1 text-sm text-gray-600">Aucun fournisseur ne correspond à l’identifiant fourni.</p>
+        <div class="rounded-2xl border bg-white p-10 text-center">
+            <p class="text-base font-semibold">Fournisseur introuvable</p>
+            <p class="mt-1 text-sm text-zinc-500">
+                Aucun fournisseur ne correspond à l’identifiant fourni.
+            </p>
             <div class="mt-4">
-                <a href="/Staff/Suppliers"
-                   class="inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800">
+                <a asp-area="Staff" asp-page="/Suppliers/Index"
+                   class="inline-flex items-center justify-center rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
                     Retour à la liste
                 </a>
             </div>
@@ -40,55 +45,62 @@
     }
     else
     {
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
-            <div>
-                <p class="text-sm text-gray-500">Fournisseur</p>
-                <p class="text-lg font-semibold text-gray-900">@Model.SupplierName</p>
-                <p class="text-sm text-gray-600">
-                    Note actuelle (mock) : <span class="font-medium">@Model.CurrentRating.ToString("N1")/5</span>
-                    • @Model.CurrentRatingsCount avis
-                </p>
+        <div class="rounded-2xl border bg-white p-5">
+            <!-- Infos fournisseur (style card info) -->
+            <div class="mb-5 grid gap-4 sm:grid-cols-2">
+                <div class="rounded-xl border bg-zinc-50 p-4">
+                    <p class="text-xs text-zinc-500">Fournisseur</p>
+                    <p class="mt-1 text-sm font-semibold">@Model.SupplierName</p>
+                </div>
+
+                <div class="rounded-xl border bg-zinc-50 p-4">
+                    <p class="text-xs text-zinc-500">Note actuelle</p>
+                    <p class="mt-1 text-sm font-semibold">
+                        @Model.CurrentRating.ToString("N1") / 5
+                        <span class="text-xs font-normal text-zinc-500">• @Model.CurrentRatingsCount avis</span>
+                    </p>
+                </div>
             </div>
 
             <form method="post" class="space-y-5">
                 <input type="hidden" asp-for="SupplierId" />
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Note (1 → 5)</label>
+                    <label class="mb-1 block text-sm font-medium">Note (1 → 5)</label>
                     <input asp-for="Form.Rating" type="number" min="1" max="5" step="1"
-                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                    <span asp-validation-for="Form.Rating" class="text-xs text-red-600"></span>
-                    <p class="mt-1 text-xs text-gray-500">1 = mauvais, 5 = excellent.</p>
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">1 = mauvais, 5 = excellent.</p>
+                    <span asp-validation-for="Form.Rating" class="text-sm text-red-600"></span>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Commentaire (optionnel)</label>
-                    <textarea asp-for="Form.Comment" rows="3"
-                              placeholder="Ex: livraison rapide, bon packaging..."
-                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
-                    <span asp-validation-for="Form.Comment" class="text-xs text-red-600"></span>
+                    <label class="mb-1 block text-sm font-medium">Commentaire (optionnel)</label>
+                    <textarea asp-for="Form.Comment" rows="4"
+                              placeholder="Ex: livraison rapide, bon packaging…"
+                              class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200"></textarea>
+                    <p class="mt-1 text-xs text-zinc-500">Visible dans l’historique du fournisseur (mock).</p>
+                    <span asp-validation-for="Form.Comment" class="text-sm text-red-600"></span>
                 </div>
 
-                <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                    <strong>Confirmation :</strong> une fois envoyée, l’évaluation sera enregistrée (mock).
+                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                    <strong>Confirmation :</strong> une fois envoyée, l’évaluation sera enregistrée.
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-2">
-                    <a href="/Staff/Suppliers"
-                       class="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100">
+                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <a asp-area="Staff" asp-page="/Suppliers/Index"
+                       class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
                         Annuler
                     </a>
 
                     <button type="submit"
                             onclick="return confirm('Confirmer l’envoi de cette note ?');"
-                            class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-                        Envoyer la note
+                            class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                        Envoyer
                     </button>
                 </div>
             </form>
         </div>
     }
-
 </div>
 
 @section Scripts {
