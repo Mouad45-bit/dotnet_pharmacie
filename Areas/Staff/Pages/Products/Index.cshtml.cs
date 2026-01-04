@@ -14,6 +14,36 @@ namespace project_pharmacie.Areas.Staff.Pages.Products
 
         public void OnGet()
         {
+            Rows = BuildRows(Query);
+        }
+
+        // Handler appelé par: <form method="post" asp-page-handler="Delete">
+        public IActionResult OnPostDelete(int id, string? q)
+        {
+            // Conserver la recherche après suppression
+            Query = q;
+
+            // MOCK: on vérifie si l'ID existe dans la liste mock
+            var all = BuildRows(null);
+            var found = all.FirstOrDefault(p => p.Id == id);
+
+            if (found is null)
+            {
+                TempData["FlashType"] = "error";
+                TempData["FlashMessage"] = "Produit introuvable.";
+                return RedirectToPage(new { q = Query });
+            }
+
+            // MOCK: suppression non persistée (car pas de DB)
+            // On affiche juste un message de succès.
+            TempData["FlashType"] = "success";
+            TempData["FlashMessage"] = $"Produit supprimé : {found.Name}.";
+
+            return RedirectToPage(new { q = Query });
+        }
+
+        private static List<ProductRow> BuildRows(string? query)
+        {
             // MOCK — plus tard: service/DB
             var all = new List<ProductRow>
             {
@@ -24,19 +54,17 @@ namespace project_pharmacie.Areas.Staff.Pages.Products
                 new(5, "Biseptine", "Antiseptique", 25, 10, 32.00m),
             };
 
-            if (!string.IsNullOrWhiteSpace(Query))
+            if (!string.IsNullOrWhiteSpace(query))
             {
-                var q = Query.Trim().ToLowerInvariant();
-                Rows = all.Where(p =>
+                var q = query.Trim().ToLowerInvariant();
+                return all.Where(p =>
                         p.Name.ToLowerInvariant().Contains(q) ||
                         p.Category.ToLowerInvariant().Contains(q)
                     )
                     .ToList();
             }
-            else
-            {
-                Rows = all;
-            }
+
+            return all;
         }
 
         public (string badgeCls, string text) GetStockBadge(int stock, int reorder)
