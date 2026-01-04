@@ -1,89 +1,102 @@
 ﻿@page "{id:int}"
 @model project_pharmacie.Areas.Staff.Pages.Clients.EditModel
 @{
-    ViewData["Title"] = "Dossier Client";
+    ViewData["Title"] = "Modifier Client";
 }
 
-<div class="max-w-5xl mx-auto mt-8">
+<div class="mx-auto max-w-3xl px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex items-start justify-between gap-3">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Modifier un client</h1>
+            <p class="text-sm text-zinc-500">Mettre à jour les informations du dossier.</p>
+        </div>
 
-    <div class="flex items-center justify-between mb-8">
-        <div class="flex items-center gap-4">
-            <a asp-page="./Index" class="h-10 w-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition shadow-sm">
-                ←
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold text-slate-900">@Model.Client.Name</h1>
-                <p class="text-slate-500 text-sm">Gestion du dossier et fidélité</p>
-            </div>
-        </div>
-        <div class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-md">
-            Statut : @Model.Client.Status
-        </div>
+        <a href="#"
+           onclick="history.back(); return false;"
+           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+            ← Retour
+        </a>
     </div>
 
-    <form method="post" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
-                <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                    📄 Informations Personnelles
-                </h2>
+    <partial name="/Areas/Admin/Pages/Shared/_Flash.cshtml" />
 
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Nom Complet</label>
-                        <input asp-for="Client.Name" class="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 font-medium focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none transition" />
-                    </div>
+    <div class="rounded-2xl border bg-white p-5">
+        <form method="post" class="space-y-5">
 
-                    <div class="grid grid-cols-2 gap-5">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Email</label>
-                            <input asp-for="Client.Email" class="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none transition" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Téléphone</label>
-                            <input asp-for="Client.Phone" class="w-full p-3 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-slate-900 outline-none transition" />
-                        </div>
-                    </div>
+            <div>
+                <label class="mb-1 block text-sm font-medium">Nom complet</label>
+                <input asp-for="Client.Name" autocomplete="name"
+                       placeholder="Ex: Jean Dupont"
+                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                <p class="mt-1 text-xs text-zinc-500">Nom affiché dans le fichier clients.</p>
+                <span asp-validation-for="Client.Name" class="text-sm text-red-600"></span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Email</label>
+                    <input asp-for="Client.Email" type="email" autocomplete="email"
+                           placeholder="ex: client@exemple.ma"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Doit être valide.</p>
+                    <span asp-validation-for="Client.Email" class="text-sm text-red-600"></span>
+                </div>
+
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Téléphone (optionnel)</label>
+                    <input asp-for="Client.Phone" type="tel" autocomplete="tel"
+                           placeholder="Ex: 06 12 34 56 78"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Format libre (Maroc: 06/07…).</p>
+                    <span asp-validation-for="Client.Phone" class="text-sm text-red-600"></span>
                 </div>
             </div>
 
-            <div class="flex justify-end">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all w-full md:w-auto">
-                    💾 Enregistrer les modifications
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium">Points de fidélité</label>
+                    <input asp-for="Client.LoyaltyPoints" type="number" min="0"
+                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
+                    <p class="mt-1 text-xs text-zinc-500">Le statut sera recalculé à l’enregistrement.</p>
+                    <span asp-validation-for="Client.LoyaltyPoints" class="text-sm text-red-600"></span>
+                </div>
+
+                <div class="flex items-end justify-between rounded-2xl border bg-zinc-50 p-4">
+                    <div>
+                        <p class="text-sm font-medium">Statut client</p>
+                        <p class="text-xs text-zinc-500">Déduit des points de fidélité.</p>
+                    </div>
+
+                    <span class="rounded-full bg-white px-3 py-1 text-sm font-medium text-zinc-900 border">
+                        @Model.Client.Status
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium">Offre personnalisée (optionnel)</label>
+                <textarea asp-for="Client.PersonalizedOffer" rows="4"
+                          placeholder="Ex: -10% sur la parapharmacie"
+                          class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200"></textarea>
+                <p class="mt-1 text-xs text-zinc-500">Visible dans le dossier client.</p>
+                <span asp-validation-for="Client.PersonalizedOffer" class="text-sm text-red-600"></span>
+            </div>
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a asp-area="Staff" asp-page="/Clients/Index"
+                   class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+                    Annuler
+                </a>
+                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                    Enregistrer
                 </button>
             </div>
-        </div>
 
-        <div class="lg:col-span-1 space-y-6">
-
-            <div class="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
-                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white opacity-5"></div>
-
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Solde Points</h3>
-
-                <div class="flex items-baseline gap-1 mt-2 mb-6">
-                    <input asp-for="Client.LoyaltyPoints" type="number" class="bg-transparent text-5xl font-bold text-white w-full outline-none border-b border-slate-700 focus:border-white transition-colors p-0" />
-                    <span class="text-slate-400 font-medium">pts</span>
-                </div>
-
-                <div class="flex items-center gap-3 text-sm text-slate-300 bg-slate-800 p-3 rounded-lg border border-slate-700">
-                    <span>🏆 Prochain palier : <strong>500 pts</strong></span>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 relative">
-                <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-2xl"></div>
-
-                <h3 class="text-emerald-800 font-bold mb-3 flex items-center gap-2">
-                    🎁 Offre Spéciale
-                </h3>
-
-                <textarea asp-for="Client.PersonalizedOffer" rows="4" class="w-full p-3 rounded-lg border border-emerald-100 bg-emerald-50 text-emerald-900 text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none placeholder-emerald-300" placeholder="Écrivez une offre ici... (Ex: -10% sur tout le magasin)"></textarea>
-
-                <p class="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                    ℹ️ Visible sur l'application du client.
-                </p>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
