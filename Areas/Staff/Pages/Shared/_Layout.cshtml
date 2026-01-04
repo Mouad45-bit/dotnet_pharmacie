@@ -1,42 +1,173 @@
-﻿<!DOCTYPE html>
+﻿@* Areas/Staff/Pages/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Secteur C</title>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <title>@ViewData["Title"] - project_pharmacie</title>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/project_pharmacie.styles.css" asp-append-version="true" />
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans">
 
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+<body class="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col">
+    @{
+        var path = Context.Request.Path.Value ?? "";
+        var isStaffArea = path.StartsWith("/Staff", StringComparison.OrdinalIgnoreCase);
+    }
 
+    <!-- TOP NAV -->
+    <header class="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+            <!-- Brand -->
             <div class="flex items-center gap-3">
-                <div class="bg-slate-900 text-white font-bold h-9 w-9 flex items-center justify-center rounded-lg">C</div>
-                <span class="font-bold text-lg tracking-tight">Secteur C</span>
+                <a asp-area="" asp-page="/Index" class="text-lg font-semibold tracking-tight">
+                    project_pharmacie
+                </a>
+
+                @if (isStaffArea)
+                {
+                    <span class="rounded-full border bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                        Staff
+                    </span>
+                }
             </div>
 
-            <nav class="flex items-center gap-8">
-                <a asp-area="Staff" asp-page="/Sales/History" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-                    Ventes
+            <!-- Desktop nav -->
+            <nav class="hidden items-center gap-2 md:flex">
+                <a asp-area="" asp-page="/Index"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                    Home
                 </a>
-                <a asp-area="Staff" asp-page="/Clients/Index" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-                    Clients
+
+                <a asp-area="" asp-page="/Privacy"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                    Privacy
                 </a>
-                <a asp-area="Staff" asp-page="/Profile/Index" class="text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors">
-                    Profil
-                </a>
+
+                @if (isStaffArea)
+                {
+                    <div class="mx-2 h-6 w-px bg-zinc-200"></div>
+
+                    <a asp-area="Staff" asp-page="/Dashboard/Index"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Dashboard
+                    </a>
+
+                    <a asp-area="Staff" asp-page="/Clients/Index"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Clients
+                    </a>
+
+                    <a asp-area="Staff" asp-page="/Products/Index"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Produits
+                    </a>
+
+                    <a asp-area="Staff" asp-page="/Orders/History"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Commandes
+                    </a>
+
+                    <a asp-area="Staff" asp-page="/Sales/History"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Ventes
+                    </a>
+
+                    <a asp-area="Staff" asp-page="/Profile/Index"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Profil
+                    </a>
+                }
             </nav>
 
-            <div>
-                <span class="text-xs font-bold text-slate-300 border border-slate-200 px-2 py-1 rounded">STAFF</span>
+            <!-- Mobile button -->
+            <button id="navToggle"
+                    class="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50 md:hidden"
+                    type="button">
+                Menu
+            </button>
+        </div>
+
+        <!-- Mobile panel -->
+        <div id="mobileNav" class="hidden border-t bg-white md:hidden">
+            <div class="mx-auto max-w-6xl px-4 py-3">
+                <div class="flex flex-col gap-2">
+                    <a asp-area="" asp-page="/Index"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Home
+                    </a>
+
+                    <a asp-area="" asp-page="/Privacy"
+                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                        Privacy
+                    </a>
+
+                    @if (isStaffArea)
+                    {
+                        <div class="my-2 h-px bg-zinc-200"></div>
+
+                        <div class="flex flex-col gap-2">
+                            <a asp-area="Staff" asp-page="/Dashboard/Index"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Dashboard
+                            </a>
+
+                            <a asp-area="Staff" asp-page="/Clients/Index"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Clients
+                            </a>
+
+                            <a asp-area="Staff" asp-page="/Products/Index"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Produits
+                            </a>
+
+                            <a asp-area="Staff" asp-page="/Orders/History"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Commandes
+                            </a>
+
+                            <a asp-area="Staff" asp-page="/Sales/History"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Ventes
+                            </a>
+
+                            <a asp-area="Staff" asp-page="/Profile/Index"
+                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
+                                Profil
+                            </a>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-6">
+    <!-- MAIN -->
+    <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         @RenderBody()
     </main>
+
+    <!-- FOOTER -->
+    <footer class="mt-auto border-t bg-white">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-zinc-500">
+            <span>&copy; @DateTime.Now.Year - project_pharmacie</span>
+            <a asp-area="" asp-page="/Privacy" class="hover:text-zinc-700">Privacy</a>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var btn = document.getElementById("navToggle");
+            var panel = document.getElementById("mobileNav");
+            if (!btn || !panel) return;
+
+            btn.addEventListener("click", function () {
+                panel.classList.toggle("hidden");
+            });
+        })();
+    </script>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
