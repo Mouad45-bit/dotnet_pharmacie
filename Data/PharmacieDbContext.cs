@@ -43,7 +43,7 @@ public class PharmacieDbContext : DbContext
             .HasOne(p => p.Administrateur)
             .WithMany(a => a.Personnels)
             .HasForeignKey(p => p.AdministrateurId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Personnel 1..* Produit
         modelBuilder.Entity<Produit>()
