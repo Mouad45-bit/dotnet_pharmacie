@@ -8,7 +8,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 	public class CreateModel : PageModel
 	{
 		[BindProperty]
-		public Models.Sales NewSale { get; set; } = new Models.Sales();
+		public Models.Vente NewSale { get; set; } = new Models.Vente();
 
 		public void OnGet()
 		{
@@ -22,7 +22,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 			}
 
 			// Simule l'enregistrement (à connecter à une vraie BDD plus tard)
-			NewSale.Date = DateTime.Now;
+			NewSale.DateVente = DateTime.Now;
 
 			// Redirection vers l'historique
 			return RedirectToPage("./History");
