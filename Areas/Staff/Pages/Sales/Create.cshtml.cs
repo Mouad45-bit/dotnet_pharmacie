@@ -1,31 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Models;
-using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace project_pharmacie.Areas.Staff.Pages.Sales
+namespace project_pharmacie.Areas.Staff.Pages.Sales;
+
+public class CreateModel : PageModel
 {
-	public class CreateModel : PageModel
-	{
-		[BindProperty]
-		public Models.Vente NewSale { get; set; } = new Models.Vente();
+    [BindProperty]
+    public SaleForm NewSale { get; set; } = new();
 
-		public void OnGet()
-		{
-		}
+    public void OnGet() { }
 
-		public IActionResult OnPost()
-		{
-			if (!ModelState.IsValid)
-			{
-				return Page();
-			}
+    public IActionResult OnPost()
+    {
+        if (!ModelState.IsValid) return Page();
 
-			// Simule l'enregistrement (à connecter à une vraie BDD plus tard)
-			NewSale.DateVente = DateTime.Now;
+        // pour l’instant: mock ok
+        // plus tard: on mappe vers Vente + VenteLigne + Client/Produit en DB
 
-			// Redirection vers l'historique
-			return RedirectToPage("./History");
-		}
-	}
+        TempData["Message"] = $"Vente enregistrée pour {NewSale.CustomerName}.";
+        return RedirectToPage("./History");
+    }
+
+    public class SaleForm
+    {
+        [Required] public string CustomerName { get; set; } = "";
+        [Required] public string DrugName { get; set; } = "";
+        [Range(1, 9999)] public int Quantity { get; set; } = 1;
+        [Range(0, 999999)] public decimal TotalPrice { get; set; } = 0m;
+    }
 }
