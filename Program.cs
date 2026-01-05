@@ -18,6 +18,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PharmacieDbContext>();
     db.Database.Migrate();
+    DbSeeder.Seed(db);
 }
 
 // Pipeline HTTP
