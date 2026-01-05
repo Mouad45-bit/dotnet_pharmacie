@@ -1,13 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace project_pharmacie.Areas.Staff.Pages.Orders
 {
     public class HistoryModel : PageModel
     {
+        private readonly PharmacieDbContext _db;
+
+        public HistoryModel(PharmacieDbContext db) => _db = db;
+
         [BindProperty(SupportsGet = true)]
         public string? Status { get; set; }
 
@@ -19,29 +26,81 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
 
         public List<OrderRow> Rows { get; private set; } = new();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            var all = MockOrders();
+            var query = _db.Commandes
+                .AsNoTracking()
+                .Include(c => c.Fournisseur)
+                .Include(c => c.Lignes)
+                    .ThenInclude(l => l.Produit)
+                .AsQueryable();
 
-            if (!string.IsNullOrWhiteSpace(StatusFilter))
-            {
-                all = all
-                    .Where(o => o.Status.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-
+            // Recherche fournisseur/produit
             if (!string.IsNullOrWhiteSpace(Query))
             {
-                var q = Query.Trim().ToLowerInvariant();
-                all = all
-                    .Where(o => o.SupplierName.ToLowerInvariant().Contains(q)
-                             || o.ProductName.ToLowerInvariant().Contains(q))
-                    .ToList();
+                var term = Query.Trim();
+
+                query = query.Where(c =>
+                    (c.Fournisseur != null && EF.Functions.Like(c.Fournisseur.Nom, $"%{term}%"))
+                    ||
+                    c.Lignes.Any(l =>
+                        EF.Functions.Like(l.ProduitReference, $"%{term}%")
+                        || (l.Produit != null && EF.Functions.Like(l.Produit.Nom, $"%{term}%"))
+                    )
+                );
             }
 
-            Rows = all
-                .OrderByDescending(o => o.CreatedAt)
-                .ToList();
+            var list = await query
+                .OrderByDescending(c => c.Date)
+                .ToListAsync();
+
+            Rows = list.Select(c =>
+            {
+                var status = DeriveStatus(c.Date);
+
+                var qty = c.Lignes.Sum(l => l.Quantite);
+
+                var productLabel = "-";
+                if (c.Lignes.Count == 1)
+                {
+                    var l = c.Lignes.First();
+                    productLabel = l.Produit?.Nom ?? l.ProduitReference;
+                }
+                else if (c.Lignes.Count > 1)
+                {
+                    var first = c.Lignes.First();
+                    var firstName = first.Produit?.Nom ?? first.ProduitReference;
+                    productLabel = $"{firstName} (+{c.Lignes.Count - 1})";
+                }
+
+                return new OrderRow(
+                    Id: c.Id,
+                    SupplierId: c.FournisseurId,
+                    SupplierName: c.Fournisseur?.Nom ?? "-",
+                    ProductName: productLabel,
+                    Quantity: qty,
+                    Status: status,
+                    CreatedAt: c.Date,
+                    Total: c.PrixTotal
+                );
+            }).ToList();
+
+            // Filtre statut (statut dérivé car pas de colonne Status en DB)
+            if (!string.IsNullOrWhiteSpace(StatusFilter))
+            {
+                Rows = Rows
+                    .Where(r => r.Status.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+        }
+
+        // Statut “simulé” sans changer le schéma :
+        // - < 36h : PENDING
+        // - sinon : DELIVERED
+        private static string DeriveStatus(DateTime date)
+        {
+            var age = DateTime.Now - date;
+            return age.TotalHours < 36 ? "PENDING" : "DELIVERED";
         }
 
         public (string cls, string label) GetStatusBadge(string status)
@@ -49,32 +108,19 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
             return (status ?? "").ToUpperInvariant() switch
             {
                 "DELIVERED" => ("bg-emerald-50 text-emerald-700 ring-emerald-200", "Livrée"),
-                "CANCELLED" => ("bg-red-50 text-red-700 ring-red-200", "Annulée"),
                 _ => ("bg-amber-50 text-amber-700 ring-amber-200", "En attente"),
             };
         }
 
-        private List<OrderRow> MockOrders()
-        {
-            var now = DateTime.Now;
-
-            return new List<OrderRow>
-            {
-                new OrderRow(101, 1, "MedicaPlus", "Doliprane 1g", 10, "DELIVERED", now.AddDays(-2).AddHours(-3)),
-                new OrderRow(102, 2, "PharmaDist", "Aerius", 20, "PENDING",   now.AddDays(-1).AddHours(-5)),
-                new OrderRow(103, 3, "BioSup",     "Vitamine C", 15, "CANCELLED", now.AddDays(-7).AddHours(-2)),
-                new OrderRow(104, 1, "MedicaPlus", "Smecta",     30, "DELIVERED", now.AddDays(-10).AddHours(-1)),
-            };
-        }
-
         public record OrderRow(
-            int Id,
-            int SupplierId,
+            string Id,
+            string SupplierId,
             string SupplierName,
             string ProductName,
             int Quantity,
             string Status,
-            DateTime CreatedAt
+            DateTime CreatedAt,
+            decimal Total
         );
     }
 }
