@@ -1,90 +1,82 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 
-namespace project_pharmacie.Areas.Staff.Pages.Products
+namespace project_pharmacie.Areas.Staff.Pages.Products;
+
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
+    private readonly PharmacieDbContext _db;
+
+    public IndexModel(PharmacieDbContext db) => _db = db;
+
+    [BindProperty(SupportsGet = true)]
+    public string? Query { get; set; }
+
+    public List<ProductRow> Rows { get; private set; } = new();
+
+    public async Task OnGetAsync()
     {
-        [BindProperty(SupportsGet = true)]
-        public string? Query { get; set; }
+        var q = _db.Produits.AsNoTracking();
 
-        public List<ProductRow> Rows { get; private set; } = new();
-
-        public void OnGet()
+        if (!string.IsNullOrWhiteSpace(Query))
         {
-            Rows = BuildRows(Query);
+            var term = Query.Trim();
+            q = q.Where(p =>
+                EF.Functions.Like(p.Nom, $"%{term}%") ||
+                EF.Functions.Like(p.Reference, $"%{term}%")
+            );
         }
 
-        // Handler appelé par: <form method="post" asp-page-handler="Delete">
-        public IActionResult OnPostDelete(int id, string? q)
+        Rows = await q
+            .OrderBy(p => p.Nom)
+            .Select(p => new ProductRow(
+                p.Reference,
+                p.Nom,
+                p.Prix,
+                p.Quantite,
+                p.DatePeremption
+            ))
+            .ToListAsync();
+    }
+
+    public async Task<IActionResult> OnPostDeleteAsync(string id, string? q)
+    {
+        Query = q;
+
+        var prod = await _db.Produits.FindAsync(id);
+        if (prod is null)
         {
-            // Conserver la recherche après suppression
-            Query = q;
-
-            // MOCK: on vérifie si l'ID existe dans la liste mock
-            var all = BuildRows(null);
-            var found = all.FirstOrDefault(p => p.Id == id);
-
-            if (found is null)
-            {
-                TempData["FlashType"] = "error";
-                TempData["FlashMessage"] = "Produit introuvable.";
-                return RedirectToPage(new { q = Query });
-            }
-
-            // MOCK: suppression non persistée (car pas de DB)
-            // On affiche juste un message de succès.
-            TempData["FlashType"] = "success";
-            TempData["FlashMessage"] = $"Produit supprimé : {found.Name}.";
-
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Produit introuvable.";
             return RedirectToPage(new { q = Query });
         }
 
-        private static List<ProductRow> BuildRows(string? query)
-        {
-            // MOCK — plus tard: service/DB
-            var all = new List<ProductRow>
-            {
-                new(1, "Doliprane 1g", "Antalgique", 12, 10, 18.50m),
-                new(2, "Vitamine C", "Compléments", 3, 8, 45.00m),
-                new(3, "Aerius", "Allergie", 0, 5, 79.90m),
-                new(4, "Smecta", "Digestif", 6, 6, 34.00m),
-                new(5, "Biseptine", "Antiseptique", 25, 10, 32.00m),
-            };
+        _db.Produits.Remove(prod);
+        await _db.SaveChangesAsync();
 
-            if (!string.IsNullOrWhiteSpace(query))
-            {
-                var q = query.Trim().ToLowerInvariant();
-                return all.Where(p =>
-                        p.Name.ToLowerInvariant().Contains(q) ||
-                        p.Category.ToLowerInvariant().Contains(q)
-                    )
-                    .ToList();
-            }
-
-            return all;
-        }
-
-        public (string badgeCls, string text) GetStockBadge(int stock, int reorder)
-        {
-            if (stock == 0)
-                return ("bg-red-50 text-red-700 ring-red-200", "Rupture");
-
-            if (stock <= reorder)
-                return ("bg-amber-50 text-amber-700 ring-amber-200", "Alerte");
-
-            return ("bg-emerald-50 text-emerald-700 ring-emerald-200", "OK");
-        }
-
-        public record ProductRow(
-            int Id,
-            string Name,
-            string Category,
-            int Stock,
-            int ReorderLevel,
-            decimal UnitPrice
-        );
+        TempData["FlashType"] = "success";
+        TempData["FlashMessage"] = $"Produit supprimé : {prod.Nom}.";
+        return RedirectToPage(new { q = Query });
     }
+
+    public (string badgeCls, string text) GetStockBadge(int stock)
+    {
+        if (stock == 0)
+            return ("bg-red-50 text-red-700 ring-red-200", "Rupture");
+
+        if (stock <= 5)
+            return ("bg-amber-50 text-amber-700 ring-amber-200", "Alerte");
+
+        return ("bg-emerald-50 text-emerald-700 ring-emerald-200", "OK");
+    }
+
+    public record ProductRow(
+        string Reference,
+        string Nom,
+        decimal Prix,
+        int Quantite,
+        DateTime? DatePeremption
+    );
 }
