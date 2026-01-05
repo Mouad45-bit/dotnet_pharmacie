@@ -22,9 +22,9 @@ namespace project_pharmacie.Areas.Staff.Pages.Clients
         private static readonly object _lock = new();
         private static List<Client> _store = new()
         {
-            new Client { Id = 1, Name = "Jean Dupont", Email = "jean.dupont@email.com", LoyaltyPoints = 120, Status = "Or",     PersonalizedOffer = "-10% Gamme Bio" },
-            new Client { Id = 2, Name = "Marie Curie", Email = "marie.curie@science.org", LoyaltyPoints = 45,  Status = "Argent", PersonalizedOffer = "" },
-            new Client { Id = 3, Name = "Paul Atreides", Email = "paul@dune.com", LoyaltyPoints = 5,  Status = "Nouveau", PersonalizedOffer = "" }
+            new Client { Id = "1", Name = "Jean Dupont", Email = "jean.dupont@email.com", LoyaltyPoints = 120, Status = "Or",     PersonalizedOffer = "-10% Gamme Bio" },
+            new Client { Id = "2", Name = "Marie Curie", Email = "marie.curie@science.org", LoyaltyPoints = 45,  Status = "Argent", PersonalizedOffer = "" },
+            new Client { Id = "3", Name = "Paul Atreides", Email = "paul@dune.com", LoyaltyPoints = 5,  Status = "Nouveau", PersonalizedOffer = "" }
         };
 
         public void OnGet()
@@ -52,7 +52,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Clients
             Clients = query;
         }
 
-        public IActionResult OnPostDelete(int id, string? q)
+        public IActionResult OnPostDelete(string id, string? q)
         {
             // garder le q après suppression (comme Admin)
             Q = q;
