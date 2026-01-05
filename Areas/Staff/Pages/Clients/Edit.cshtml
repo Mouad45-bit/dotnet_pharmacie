@@ -1,4 +1,4 @@
-﻿@page "{id:int}"
+﻿@page "{id}"
 @model project_pharmacie.Areas.Staff.Pages.Clients.EditModel
 @{
     ViewData["Title"] = "Modifier Client";
@@ -25,6 +25,7 @@
         <form method="post" class="space-y-5">
 
             <div>
+                <input type="hidden" asp-for="Client.Id" />
                 <label class="mb-1 block text-sm font-medium">Nom complet</label>
                 <input asp-for="Client.Name" autocomplete="name"
                        placeholder="Ex: Jean Dupont"
