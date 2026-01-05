@@ -9,7 +9,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Clients
 		[BindProperty]
 		public Client Client { get; set; }
 
-		public void OnGet(int id)
+		public void OnGet(string id)
 		{
 			// Mock : On simule la récupération du client ID 1 pour l'exemple
 			// Plus tard : Client = _service.GetById(id);
