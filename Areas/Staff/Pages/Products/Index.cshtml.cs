@@ -1,15 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Products;
 
 public class IndexModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IProduitService _produitService;
 
-    public IndexModel(PharmacieDbContext db) => _db = db;
+    public IndexModel(IProduitService produitService) => _produitService = produitService;
 
     [BindProperty(SupportsGet = true)]
     public string? Query { get; set; }
@@ -18,18 +17,9 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var q = _db.Produits.AsNoTracking();
+        var produits = await _produitService.ListAsync(Query);
 
-        if (!string.IsNullOrWhiteSpace(Query))
-        {
-            var term = Query.Trim();
-            q = q.Where(p =>
-                EF.Functions.Like(p.Nom, $"%{term}%") ||
-                EF.Functions.Like(p.Reference, $"%{term}%")
-            );
-        }
-
-        Rows = await q
+        Rows = produits
             .OrderBy(p => p.Nom)
             .Select(p => new ProductRow(
                 p.Reference,
@@ -38,26 +28,23 @@ public class IndexModel : PageModel
                 p.Quantite,
                 p.DatePeremption
             ))
-            .ToListAsync();
+            .ToList();
     }
 
     public async Task<IActionResult> OnPostDeleteAsync(string id, string? q)
     {
         Query = q;
 
-        var prod = await _db.Produits.FindAsync(id);
-        if (prod is null)
+        var result = await _produitService.DeleteAsync(id);
+        if (!result.Success)
         {
             TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Produit introuvable.";
+            TempData["FlashMessage"] = result.Error ?? "Suppression impossible.";
             return RedirectToPage(new { q = Query });
         }
 
-        _db.Produits.Remove(prod);
-        await _db.SaveChangesAsync();
-
         TempData["FlashType"] = "success";
-        TempData["FlashMessage"] = $"Produit supprimé : {prod.Nom}.";
+        TempData["FlashMessage"] = "Produit supprimé.";
         return RedirectToPage(new { q = Query });
     }
 
