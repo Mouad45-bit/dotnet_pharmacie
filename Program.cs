@@ -1,27 +1,43 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿// Program.cs
 
-// Ajouter les services Razor Pages
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Razor Pages
 builder.Services.AddRazorPages();
+
+// EF Core (SQLite)
+builder.Services.AddDbContext<PharmacieDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? "Data Source=pharmacie.db")); // fallback si la config manque
 
 var app = builder.Build();
 
-// Configuration du pipeline HTTP
+// ✅ Auto-migrate au démarrage (utile pour éviter "table not found")
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<PharmacieDbContext>();
+    db.Database.Migrate();
+}
+
+// Pipeline HTTP
 if (!app.Environment.IsDevelopment())
 {
-	app.UseExceptionHandler("/Error");
-	app.UseHsts();
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
 
-// ✅ LA LIGNE CLÉ : Autorise l'accès au dossier wwwroot
+// autorise l'accès à wwwroot
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
-// ✅ VERSION SIMPLE : On mappe les pages sans "StaticAssets" complexes
 app.MapRazorPages();
 
 app.Run();
