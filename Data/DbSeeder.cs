@@ -111,7 +111,9 @@ public static class DbSeeder
         for (int i = 1; i <= 120; i++)
         {
             var item = catalog[rng.Next(catalog.Length)];
-            var prix = Math.Round((decimal)(item.PrixMin + rng.NextDouble() * (double)(item.PrixMax - item.PrixMin)), 2);
+            var prix = Math.Round(
+                item.PrixMin + (decimal)rng.NextDouble() * (item.PrixMax - item.PrixMin), 2
+             );
 
             var stock = rng.Next(0, 160);
             var refProd = $"P-{i:D4}";
