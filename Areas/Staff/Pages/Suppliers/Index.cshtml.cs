@@ -1,78 +1,87 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 
-namespace project_pharmacie.Areas.Staff.Pages.Suppliers
+namespace project_pharmacie.Areas.Staff.Pages.Suppliers;
+
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
+    private readonly PharmacieDbContext _db;
+
+    public IndexModel(PharmacieDbContext db) => _db = db;
+
+    [BindProperty(SupportsGet = true)]
+    public string? Sort { get; set; } = "rating_desc";
+
+    public List<SupplierRow> Rows { get; private set; } = new();
+
+    public int TotalSuppliers { get; private set; }
+    public double AverageRating { get; private set; }
+    public int TotalRatingsCount { get; private set; }
+    public string BestSupplierName { get; private set; } = "-";
+    public double BestSupplierRating { get; private set; }
+
+    public async Task OnGetAsync()
     {
-        [BindProperty(SupportsGet = true)]
-        public string? Sort { get; set; } = "rating_desc";
+        var fournisseurs = await _db.Fournisseurs
+            .AsNoTracking()
+            .Select(f => new
+            {
+                f.Id,
+                Name = f.Nom,
+                Rating = f.NoteGlobale,
+                RatingsCount = _db.Commandes.Count(c => c.FournisseurId == f.Id)
+            })
+            .ToListAsync();
 
-        public List<SupplierRow> Rows { get; private set; } = new();
+        TotalSuppliers = fournisseurs.Count;
+        TotalRatingsCount = fournisseurs.Sum(x => x.RatingsCount);
+        AverageRating = fournisseurs.Count == 0 ? 0 : fournisseurs.Average(x => x.Rating);
 
-        // Summary
-        public int TotalSuppliers { get; private set; }
-        public double AverageRating { get; private set; }
-        public int TotalRatingsCount { get; private set; }
-        public string BestSupplierName { get; private set; } = "-";
-        public double BestSupplierRating { get; private set; }
+        var best = fournisseurs
+            .OrderByDescending(x => x.Rating)
+            .ThenByDescending(x => x.RatingsCount)
+            .FirstOrDefault();
 
-        public void OnGet()
+        if (best is not null)
         {
-            var all = MockSuppliers();
-
-            TotalSuppliers = all.Count;
-            TotalRatingsCount = all.Sum(x => x.RatingsCount);
-
-            AverageRating = all.Count == 0 ? 0 : all.Average(x => x.Rating);
-
-            var best = all.OrderByDescending(x => x.Rating).ThenByDescending(x => x.RatingsCount).FirstOrDefault();
-            if (best is not null)
-            {
-                BestSupplierName = best.Name;
-                BestSupplierRating = best.Rating;
-            }
-
-            Rows = Sort?.ToLowerInvariant() switch
-            {
-                "rating_asc" => all.OrderBy(x => x.Rating).ThenByDescending(x => x.RatingsCount).ToList(),
-                "name" => all.OrderBy(x => x.Name).ToList(),
-                _ => all.OrderByDescending(x => x.Rating).ThenByDescending(x => x.RatingsCount).ToList(), // rating_desc default
-            };
+            BestSupplierName = best.Name;
+            BestSupplierRating = best.Rating;
         }
 
-        public (string badgeCls, string text) GetRatingBadge(double rating)
+        var sorted = Sort?.ToLowerInvariant() switch
         {
-            if (rating >= 4.5)
-                return ("bg-emerald-50 text-emerald-700 ring-emerald-200", "Excellent");
+            "rating_asc" => fournisseurs.OrderBy(x => x.Rating).ThenByDescending(x => x.RatingsCount),
+            "name" => fournisseurs.OrderBy(x => x.Name),
+            _ => fournisseurs.OrderByDescending(x => x.Rating).ThenByDescending(x => x.RatingsCount),
+        };
 
-            if (rating >= 3.5)
-                return ("bg-amber-50 text-amber-700 ring-amber-200", "Bon");
-
-            return ("bg-red-50 text-red-700 ring-red-200", "À surveiller");
-        }
-
-        private List<SupplierRow> MockSuppliers()
-        {
-            // MOCK — plus tard: _supplierService.List()
-            return new List<SupplierRow>
-            {
-                new(1, "MedicaPlus", "+212 6 12 34 56 78", 4.7, 123, true),
-                new(2, "PharmaDist", "+212 6 98 76 54 32", 4.3, 89, false),
-                new(3, "BioSup", "+212 6 11 22 33 44", 3.9, 41, false),
-                new(4, "FastSupply", "+212 6 55 66 77 88", 3.2, 19, false),
-            };
-        }
-
-        public record SupplierRow(
-            int Id,
-            string Name,
-            string Phone,
-            double Rating,
-            int RatingsCount,
-            bool IsPreferred
-        );
+        Rows = sorted.Select(x => new SupplierRow(
+            x.Id,
+            x.Name,
+            Phone: "-",
+            Rating: x.Rating,
+            RatingsCount: x.RatingsCount,
+            IsPreferred: x.Rating >= 4.5
+        )).ToList();
     }
+
+    public (string badgeCls, string text) GetRatingBadge(double rating)
+    {
+        if (rating >= 4.5)
+            return ("bg-emerald-50 text-emerald-700 ring-emerald-200", "Excellent");
+        if (rating >= 3.5)
+            return ("bg-amber-50 text-amber-700 ring-amber-200", "Bon");
+        return ("bg-red-50 text-red-700 ring-red-200", "À surveiller");
+    }
+
+    public record SupplierRow(
+        string Id,
+        string Name,
+        string Phone,
+        double Rating,
+        int RatingsCount,
+        bool IsPreferred
+    );
 }
