@@ -1,13 +1,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace project_pharmacie.Areas.Staff.Pages.Sales
 {
     public class HistoryModel : PageModel
     {
+        private readonly PharmacieDbContext _db;
+
+        public HistoryModel(PharmacieDbContext db) => _db = db;
+
         [BindProperty(SupportsGet = true)]
         public string? Status { get; set; }
 
@@ -19,31 +26,72 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 
         public List<SaleRow> Sales { get; private set; } = new();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            var all = MockSales();
+            var query = _db.Ventes
+                .AsNoTracking()
+                .Include(v => v.Client)
+                .Include(v => v.Lignes)
+                    .ThenInclude(l => l.Produit)
+                .Include(v => v.Facture)
+                .AsQueryable();
+
+            // Recherche client/produit
+            if (!string.IsNullOrWhiteSpace(Query))
+            {
+                var term = Query.Trim();
+
+                query = query.Where(v =>
+                    (v.Client != null && EF.Functions.Like(v.Client.Name, $"%{term}%"))
+                    ||
+                    v.Lignes.Any(l =>
+                        EF.Functions.Like(l.ProduitReference, $"%{term}%")
+                        || (l.Produit != null && EF.Functions.Like(l.Produit.Nom, $"%{term}%"))
+                    )
+                );
+            }
+
+            var list = await query
+                .OrderByDescending(v => v.DateVente)
+                .ToListAsync();
+
+            Sales = list.Select(v =>
+            {
+                var status = v.Facture != null ? "PAID" : "PENDING";
+
+                var qty = v.Lignes.Sum(l => l.Quantite);
+                var total = v.Lignes.Sum(l => l.Quantite * l.PrixUnitaire);
+
+                var productLabel = "-";
+                if (v.Lignes.Count == 1)
+                {
+                    var l = v.Lignes.First();
+                    productLabel = l.Produit?.Nom ?? l.ProduitReference;
+                }
+                else if (v.Lignes.Count > 1)
+                {
+                    var first = v.Lignes.First();
+                    var firstName = first.Produit?.Nom ?? first.ProduitReference;
+                    productLabel = $"{firstName} (+{v.Lignes.Count - 1})";
+                }
+
+                return new SaleRow(
+                    Id: v.Id,
+                    CustomerName: v.Client?.Name ?? "-",
+                    DrugName: productLabel,
+                    Quantity: qty,
+                    TotalPrice: total,
+                    Status: status,
+                    Date: v.DateVente
+                );
+            }).ToList();
 
             if (!string.IsNullOrWhiteSpace(StatusFilter))
             {
-                all = all
-                    .Where(s => (s.Status ?? "")
-                        .Equals(StatusFilter, StringComparison.OrdinalIgnoreCase))
+                Sales = Sales
+                    .Where(s => s.Status.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
-
-            if (!string.IsNullOrWhiteSpace(Query))
-            {
-                var q = Query.Trim().ToLowerInvariant();
-                all = all
-                    .Where(s =>
-                        s.CustomerName.ToLowerInvariant().Contains(q) ||
-                        s.DrugName.ToLowerInvariant().Contains(q))
-                    .ToList();
-            }
-
-            Sales = all
-                .OrderByDescending(s => s.Date)
-                .ToList();
         }
 
         public (string cls, string label) GetStatusBadge(string status)
@@ -51,26 +99,12 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
             return (status ?? "").ToUpperInvariant() switch
             {
                 "PAID" => ("bg-emerald-50 text-emerald-700 ring-emerald-200", "Payée"),
-                "CANCELLED" => ("bg-red-50 text-red-700 ring-red-200", "Annulée"),
                 _ => ("bg-amber-50 text-amber-700 ring-amber-200", "En attente"),
             };
         }
 
-        private List<SaleRow> MockSales()
-        {
-            var now = DateTime.Now;
-
-            return new List<SaleRow>
-            {
-                new SaleRow(201, "Jean Dupont", "Doliprane 1g", 2, 37.00m, "PAID",      now.AddDays(-1).AddHours(-2)),
-                new SaleRow(202, "Marie Curie", "Vitamine C",  1, 45.00m, "PENDING",   now.AddDays(-2).AddHours(-5)),
-                new SaleRow(203, "Paul Atreides","Aerius",     1, 79.90m, "CANCELLED", now.AddDays(-7).AddHours(-1)),
-                new SaleRow(204, "Sara El Amrani","Smecta",    3, 102.00m,"PAID",      now.AddDays(-10).AddHours(-3)),
-            };
-        }
-
         public record SaleRow(
-            int Id,
+            string Id,
             string CustomerName,
             string DrugName,
             int Quantity,
