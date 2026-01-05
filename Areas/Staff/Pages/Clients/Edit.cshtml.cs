@@ -1,38 +1,60 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using project_pharmacie.Data;
 using project_pharmacie.Models;
 
-namespace project_pharmacie.Areas.Staff.Pages.Clients
+namespace project_pharmacie.Areas.Staff.Pages.Clients;
+
+public class EditModel : PageModel
 {
-	public class EditModel : PageModel
-	{
-		[BindProperty]
-		public Client Client { get; set; }
+    private readonly PharmacieDbContext _db;
 
-		public void OnGet(string id)
-		{
-			// Mock : On simule la récupération du client ID 1 pour l'exemple
-			// Plus tard : Client = _service.GetById(id);
-			Client = new Client
-			{
-				Id = id,
-				Name = "Jean Dupont",
-				Email = "jean@mail.com",
-				LoyaltyPoints = 150,
-				Status = "Or",
-				PersonalizedOffer = "-20% Crèmes"
-			};
-		}
+    public EditModel(PharmacieDbContext db) => _db = db;
 
-		public IActionResult OnPost()
-		{
-			// Logique de mise à jour des points
-			if (Client.LoyaltyPoints > 100) Client.Status = "Or";
-			else if (Client.LoyaltyPoints > 50) Client.Status = "Argent";
-			else Client.Status = "Nouveau";
+    [BindProperty]
+    public Client Client { get; set; } = new();
 
-			TempData["Message"] = "Dossier client mis à jour (Points & Offres sauvegardés).";
-			return RedirectToPage("./Index");
-		}
-	}
+    public async Task<IActionResult> OnGetAsync(string id)
+    {
+        var client = await _db.Clients.FindAsync(id);
+        if (client is null)
+        {
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Client introuvable.";
+            return RedirectToPage("./Index");
+        }
+
+        Client = client;
+        return Page();
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        if (!ModelState.IsValid) return Page();
+
+        var existing = await _db.Clients.FindAsync(Client.Id);
+        if (existing is null)
+        {
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = "Client introuvable.";
+            return RedirectToPage("./Index");
+        }
+
+        existing.Name = Client.Name;
+        existing.Email = Client.Email;
+        existing.Phone = Client.Phone;
+        existing.LoyaltyPoints = Client.LoyaltyPoints;
+        existing.PersonalizedOffer = Client.PersonalizedOffer;
+
+        // recalcul statut
+        existing.Status = existing.LoyaltyPoints >= 120 ? "Or"
+                       : existing.LoyaltyPoints >= 60 ? "Argent"
+                       : "Nouveau";
+
+        await _db.SaveChangesAsync();
+
+        TempData["FlashType"] = "success";
+        TempData["FlashMessage"] = "Dossier client mis à jour.";
+        return RedirectToPage("./Index");
+    }
 }
