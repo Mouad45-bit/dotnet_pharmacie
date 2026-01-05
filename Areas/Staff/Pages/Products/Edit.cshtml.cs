@@ -1,21 +1,20 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Data;
 using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Products;
 
 public class EditModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IProduitService _produitService;
 
-    public EditModel(PharmacieDbContext db) => _db = db;
+    public EditModel(IProduitService produitService) => _produitService = produitService;
 
     // L'id dans l'URL: @page "{id}" => id = Reference (string)
     [BindProperty(SupportsGet = true)]
     public string Id { get; set; } = string.Empty;
 
-    // Bind direct sur le modèle EF
     [BindProperty]
     public Produit Produit { get; set; } = new();
 
@@ -26,7 +25,7 @@ public class EditModel : PageModel
     {
         Id = id;
 
-        var existing = await _db.Produits.FindAsync(id);
+        var existing = await _produitService.GetByReferenceAsync(id);
         if (existing is null)
         {
             Found = false;
@@ -39,7 +38,6 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        // Recharger "Found" (utile si l'utilisateur POST un id invalide)
         if (string.IsNullOrWhiteSpace(Produit.Reference))
         {
             Found = false;
@@ -47,7 +45,8 @@ public class EditModel : PageModel
             return Page();
         }
 
-        var existing = await _db.Produits.FindAsync(Produit.Reference);
+        // Vérifier existence
+        var existing = await _produitService.GetByReferenceAsync(Produit.Reference);
         Found = existing is not null;
 
         if (!Found)
@@ -62,15 +61,14 @@ public class EditModel : PageModel
             return Page();
         }
 
-        // Update (Reference = PK, on ne la modifie pas)
-        existing!.Nom = Produit.Nom;
-        existing.Prix = Produit.Prix;
-        existing.Quantite = Produit.Quantite;
-        existing.DatePeremption = Produit.DatePeremption;
+        var result = await _produitService.UpdateAsync(Produit);
+        if (!result.Success)
+        {
+            ErrorMessage = result.Error ?? "Impossible de modifier le produit.";
+            return Page();
+        }
 
-        await _db.SaveChangesAsync();
-
-        TempData["Toast.Success"] = $"Produit '{existing.Nom}' modifié.";
+        TempData["Toast.Success"] = $"Produit '{Produit.Nom}' modifié.";
         return RedirectToPage("/Products/Index", new { area = "Staff" });
     }
 }
