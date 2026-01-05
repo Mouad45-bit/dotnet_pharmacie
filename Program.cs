@@ -8,14 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Razor Pages
 builder.Services.AddRazorPages();
 
-// EF Core (SQLite)
 builder.Services.AddDbContext<PharmacieDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Data Source=pharmacie.db")); // fallback si la config manque
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
-// ✅ Auto-migrate au démarrage (utile pour éviter "table not found")
+// Auto-migrate au démarrage (utile pour éviter "table not found")
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PharmacieDbContext>();
