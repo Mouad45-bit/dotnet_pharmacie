@@ -90,10 +90,8 @@
                 <thead class="bg-zinc-50 text-zinc-600">
                     <tr>
                         <th class="px-4 py-3 font-medium">Nom</th>
-                        <th class="px-4 py-3 font-medium">Catégorie</th>
                         <th class="px-4 py-3 font-medium">Prix</th>
                         <th class="px-4 py-3 font-medium">Stock</th>
-                        <th class="px-4 py-3 font-medium">Seuil</th>
                         <th class="px-4 py-3 font-medium text-right">Actions</th>
                     </tr>
                 </thead>
@@ -101,42 +99,38 @@
                 <tbody class="divide-y">
                     @foreach (var p in Model.Rows)
                     {
-                        var (badgeCls, badgeText) = Model.GetStockBadge(p.Stock, p.ReorderLevel);
+                        var (badgeCls, badgeText) = Model.GetStockBadge(p.Quantite);
 
                         <tr class="hover:bg-zinc-50/50">
                             <td class="px-4 py-3">
-                                <span class="font-medium text-zinc-900">@p.Name</span>
+                                <span class="font-medium text-zinc-900">@p.Nom</span>
                             </td>
 
-                            <td class="px-4 py-3 text-zinc-700">@p.Category</td>
-
-                            <td class="px-4 py-3 text-zinc-700">@p.UnitPrice.ToString("N2") MAD</td>
+                            <td class="px-4 py-3 text-zinc-700">@p.Prix.ToString("N2") MAD</td>
 
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2 py-1 text-xs font-medium @badgeCls">
-                                    @badgeText • @p.Stock
+                                    @badgeText • @p.Quantite
                                 </span>
                             </td>
-
-                            <td class="px-4 py-3 text-zinc-700">@p.ReorderLevel</td>
 
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
 
                                     <!-- Modifier -->
-                                    <a asp-area="Staff" asp-page="/Products/Edit" asp-route-id="@p.Id"
+                                    <a asp-area="Staff" asp-page="/Products/Edit" asp-route-id="@p.Reference"
                                        class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
                                         Modifier
                                     </a>
 
                                     <!-- Supprimer -->
                                     <form method="post" asp-page-handler="Delete" class="inline">
-                                        <input type="hidden" name="id" value="@p.Id" />
+                                        <input type="hidden" name="id" value="@p.Reference" />
                                         <input type="hidden" name="q" value="@Model.Query" />
 
                                         <button type="submit"
                                                 class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
-                                                onclick="return confirm('Confirmer la suppression de @p.Name ?');">
+                                                onclick="return confirm('Confirmer la suppression de @p.Nom ?');">
                                             Supprimer
                                         </button>
                                     </form>
