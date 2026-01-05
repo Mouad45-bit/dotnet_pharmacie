@@ -1,56 +1,44 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
+using project_pharmacie.Models;
 
-namespace project_pharmacie.Areas.Staff.Pages.Products
+namespace project_pharmacie.Areas.Staff.Pages.Products;
+
+public class CreateModel : PageModel
 {
-    public class CreateModel : PageModel
+    private readonly PharmacieDbContext _db;
+
+    public CreateModel(PharmacieDbContext db) => _db = db;
+
+    [BindProperty]
+    public Produit Produit { get; set; } = new();
+
+    public string? ErrorMessage { get; private set; }
+
+    public void OnGet() { }
+
+    public async Task<IActionResult> OnPostAsync()
     {
-        [BindProperty]
-        public CreateProductForm Form { get; set; } = new();
-
-        public string? ErrorMessage { get; private set; }
-
-        public void OnGet()
+        if (!ModelState.IsValid)
         {
-            // valeurs par défaut (optionnel)
-            Form.Stock = 0;
-            Form.ReorderLevel = 5;
+            ErrorMessage = "Veuillez corriger les champs en erreur.";
+            return Page();
         }
 
-        public IActionResult OnPost()
+        var exists = await _db.Produits.AnyAsync(p => p.Reference == Produit.Reference);
+        if (exists)
         {
-            if (!ModelState.IsValid)
-            {
-                ErrorMessage = "Veuillez corriger les champs en erreur.";
-                return Page();
-            }
-
-            // ? MOCK : ici on branchera plus tard sur un service/DB
-            // Exemple futur : _productService.Create(Form)
-
-            TempData["Toast.Success"] = $"Produit '{Form.Name}' ajouté (mock).";
-            return RedirectToPage("/Products/Index", new { area = "Staff" });
+            ModelState.AddModelError("Produit.Reference", "Cette référence existe déjà.");
+            ErrorMessage = "Référence déjà utilisée.";
+            return Page();
         }
 
-        public class CreateProductForm
-        {
-            [Required(ErrorMessage = "Nom requis")]
-            [StringLength(80, ErrorMessage = "Max 80 caractères")]
-            public string Name { get; set; } = string.Empty;
+        _db.Produits.Add(Produit);
+        await _db.SaveChangesAsync();
 
-            [Required(ErrorMessage = "Catégorie requise")]
-            [StringLength(50, ErrorMessage = "Max 50 caractères")]
-            public string Category { get; set; } = string.Empty;
-
-            [Range(0.01, 999999, ErrorMessage = "Prix invalide")]
-            public decimal UnitPrice { get; set; }
-
-            [Range(0, 999999, ErrorMessage = "Stock invalide")]
-            public int Stock { get; set; }
-
-            [Range(0, 999999, ErrorMessage = "Seuil invalide")]
-            public int ReorderLevel { get; set; }
-        }
+        TempData["Toast.Success"] = $"Produit '{Produit.Nom}' ajouté.";
+        return RedirectToPage("/Products/Index", new { area = "Staff" });
     }
 }
