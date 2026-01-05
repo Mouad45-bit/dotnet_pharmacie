@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
 using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Products;
 
 public class CreateModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IProduitService _produitService;
 
-    public CreateModel(PharmacieDbContext db) => _db = db;
+    public CreateModel(IProduitService produitService) => _produitService = produitService;
 
     [BindProperty]
     public Produit Produit { get; set; } = new();
@@ -27,16 +26,18 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        var exists = await _db.Produits.AnyAsync(p => p.Reference == Produit.Reference);
-        if (exists)
+        var result = await _produitService.CreateAsync(Produit);
+        if (!result.Success)
         {
-            ModelState.AddModelError("Produit.Reference", "Cette référence existe déjà.");
-            ErrorMessage = "Référence déjà utilisée.";
+            // Si c'est une erreur de référence, on colle aussi dans ModelState (UI)
+            if (!string.IsNullOrWhiteSpace(result.Error) && result.Error.Contains("référence", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("Produit.Reference", result.Error);
+            }
+
+            ErrorMessage = result.Error ?? "Impossible de créer le produit.";
             return Page();
         }
-
-        _db.Produits.Add(Produit);
-        await _db.SaveChangesAsync();
 
         TempData["Toast.Success"] = $"Produit '{Produit.Nom}' ajouté.";
         return RedirectToPage("/Products/Index", new { area = "Staff" });
