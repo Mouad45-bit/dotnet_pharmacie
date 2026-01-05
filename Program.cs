@@ -13,6 +13,7 @@ builder.Services.AddDbContext<PharmacieDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IProduitService, ProduitService>();
+builder.Services.AddScoped<ICommandeService, CommandeService>();
 
 var app = builder.Build();
 
