@@ -12,7 +12,7 @@ using project_pharmacie.Data;
 namespace project_pharmacie.Migrations
 {
     [DbContext(typeof(PharmacieDbContext))]
-    [Migration("20260105183739_InitSqlServer")]
+    [Migration("20260105184303_InitSqlServer")]
     partial class InitSqlServer
     {
         /// <inheritdoc />
@@ -418,7 +418,7 @@ namespace project_pharmacie.Migrations
                     b.HasOne("project_pharmacie.Models.Administrateur", "Administrateur")
                         .WithMany("Personnels")
                         .HasForeignKey("AdministrateurId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Administrateur");
                 });

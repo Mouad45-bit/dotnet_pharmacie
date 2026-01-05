@@ -61,7 +61,7 @@ namespace project_pharmacie.Migrations
                         column: x => x.AdministrateurId,
                         principalTable: "Utilisateurs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

@@ -415,7 +415,7 @@ namespace project_pharmacie.Migrations
                     b.HasOne("project_pharmacie.Models.Administrateur", "Administrateur")
                         .WithMany("Personnels")
                         .HasForeignKey("AdministrateurId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Administrateur");
                 });
