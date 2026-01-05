@@ -1,18 +1,15 @@
-﻿using System;
+﻿using Humanizer.Localisation;
+using System.ComponentModel.DataAnnotations;
 
-namespace project_pharmacie.Models
+namespace project_pharmacie.Models;
+
+public class Client
 {
-	public class Client
-	{
-		public int Id { get; set; }
-		public string Name { get; set; } = string.Empty;
-		public string Email { get; set; } = string.Empty;
-		public string Phone { get; set; } = string.Empty;
+    [Key]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
 
-		// Nouveaux champs pour le Secteur C (Fidélité)
-		public int LoyaltyPoints { get; set; } = 0;
-		public string Status { get; set; } = "Nouveau";   // Ex: Bronze, Silver, Gold
-		public string PersonalizedOffer { get; set; } = ""; // Ex: -20% sur Parapharmacie
-		public DateTime LastVisit { get; set; } = DateTime.Now;
-	}
+    [Required, MaxLength(120)]
+    public string Nom { get; set; } = "";
+
+    public ICollection<Vente> Ventes { get; set; } = new List<Vente>();
 }
