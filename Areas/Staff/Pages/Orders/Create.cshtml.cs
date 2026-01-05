@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using project_pharmacie.Data;
-using project_pharmacie.Models;
+using project_pharmacie.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace project_pharmacie.Areas.Staff.Pages.Orders
@@ -10,8 +10,13 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
     public class CreateModel : PageModel
     {
         private readonly PharmacieDbContext _db;
+        private readonly ICommandeService _commandeService;
 
-        public CreateModel(PharmacieDbContext db) => _db = db;
+        public CreateModel(PharmacieDbContext db, ICommandeService commandeService)
+        {
+            _db = db;
+            _commandeService = commandeService;
+        }
 
         // Pour pré-sélectionner un fournisseur depuis /Suppliers (supplierId=...)
         // Maintenant string (car Fournisseur.Id est string)
@@ -47,50 +52,18 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
                 return Page();
             }
 
-            // Vérifier que le fournisseur existe en base
-            var supplier = await _db.Fournisseurs
-                .AsNoTracking()
-                .FirstOrDefaultAsync(f => f.Id == Form.SupplierId);
+            // ✅ Toute la logique DB est dans le service
+            var result = await _commandeService.CreateAsync(Form.SupplierId, Form.ProductId, Form.Quantity);
 
-            // Vérifier que le produit existe en base (ProductId = Produit.Reference)
-            var product = await _db.Produits
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Reference == Form.ProductId);
-
-            if (supplier is null || product is null)
+            if (!result.Success)
             {
-                ErrorMessage = "Fournisseur ou produit invalide (introuvable en base).";
+                ErrorMessage = result.Error ?? "Impossible de créer la commande.";
                 return Page();
             }
 
-            // Calcul serveur (important)
-            var prixUnitaire = product.Prix;
-            var prixTotal = Form.Quantity * prixUnitaire;
-
-            // Créer la commande
-            var commande = new Commande
-            {
-                FournisseurId = supplier.Id,
-                Date = DateTime.Now,
-                PrixTotal = prixTotal,
-                Note = 0,
-                PersonnelId = null
-            };
-
-            // Ajouter une ligne (1ère version : 1 seul produit)
-            commande.Lignes.Add(new CommandeLigne
-            {
-                CommandeId = commande.Id,
-                ProduitReference = product.Reference,
-                Quantite = Form.Quantity,
-                PrixUnitaire = prixUnitaire
-            });
-
-            _db.Commandes.Add(commande);
-            await _db.SaveChangesAsync();
-
+            var info = result.Data!;
             TempData["Toast.Success"] =
-                $"Commande créée : {Form.Quantity} × {product.Nom} chez {supplier.Nom} (Total: {prixTotal:N2}).";
+                $"Commande créée : {Form.Quantity} × {info.ProductName} chez {info.SupplierName} (Total: {info.Total:N2}).";
 
             return RedirectToPage("/Orders/History", new { area = "Staff" });
         }
@@ -126,7 +99,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
             [Range(1, 999999, ErrorMessage = "Quantité invalide")]
             public int Quantity { get; set; } = 1;
 
-            // On garde le champ pour l'UI mais on ne le stocke pas (pas de colonne comment)
+            // On garde le champ pour l'UI mais on ne le stocke pas ici
             [StringLength(200, ErrorMessage = "Note trop longue (max 200)")]
             public string? Note { get; set; }
         }
