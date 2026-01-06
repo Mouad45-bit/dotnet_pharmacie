@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Suppliers;
 
 public class IndexModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IFournisseurService _suppliers;
 
-    public IndexModel(PharmacieDbContext db) => _db = db;
+    public IndexModel(IFournisseurService suppliers) => _suppliers = suppliers;
 
     [BindProperty(SupportsGet = true)]
     public string? Sort { get; set; } = "rating_desc";
 
-    public List<SupplierRow> Rows { get; private set; } = new();
+    public List<SupplierRowVm> Rows { get; private set; } = new();
 
     public int TotalSuppliers { get; private set; }
     public double AverageRating { get; private set; }
@@ -24,47 +23,14 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var fournisseurs = await _db.Fournisseurs
-            .AsNoTracking()
-            .Select(f => new
-            {
-                f.Id,
-                Name = f.Nom,
-                Rating = f.NoteGlobale,
-                RatingsCount = _db.Commandes.Count(c => c.FournisseurId == f.Id)
-            })
-            .ToListAsync();
+        var vm = await _suppliers.GetDashboardAsync(Sort);
 
-        TotalSuppliers = fournisseurs.Count;
-        TotalRatingsCount = fournisseurs.Sum(x => x.RatingsCount);
-        AverageRating = fournisseurs.Count == 0 ? 0 : fournisseurs.Average(x => x.Rating);
-
-        var best = fournisseurs
-            .OrderByDescending(x => x.Rating)
-            .ThenByDescending(x => x.RatingsCount)
-            .FirstOrDefault();
-
-        if (best is not null)
-        {
-            BestSupplierName = best.Name;
-            BestSupplierRating = best.Rating;
-        }
-
-        var sorted = Sort?.ToLowerInvariant() switch
-        {
-            "rating_asc" => fournisseurs.OrderBy(x => x.Rating).ThenByDescending(x => x.RatingsCount),
-            "name" => fournisseurs.OrderBy(x => x.Name),
-            _ => fournisseurs.OrderByDescending(x => x.Rating).ThenByDescending(x => x.RatingsCount),
-        };
-
-        Rows = sorted.Select(x => new SupplierRow(
-            x.Id,
-            x.Name,
-            Phone: "-",
-            Rating: x.Rating,
-            RatingsCount: x.RatingsCount,
-            IsPreferred: x.Rating >= 4.5
-        )).ToList();
+        Rows = vm.Rows;
+        TotalSuppliers = vm.TotalSuppliers;
+        AverageRating = vm.AverageRating;
+        TotalRatingsCount = vm.TotalRatingsCount;
+        BestSupplierName = vm.BestSupplierName;
+        BestSupplierRating = vm.BestSupplierRating;
     }
 
     public (string badgeCls, string text) GetRatingBadge(double rating)
@@ -75,13 +41,4 @@ public class IndexModel : PageModel
             return ("bg-amber-50 text-amber-700 ring-amber-200", "Bon");
         return ("bg-red-50 text-red-700 ring-red-200", "À surveiller");
     }
-
-    public record SupplierRow(
-        string Id,
-        string Name,
-        string Phone,
-        double Rating,
-        int RatingsCount,
-        bool IsPreferred
-    );
 }
