@@ -1,5 +1,4 @@
-﻿using project_pharmacie.Common;
-using project_pharmacie.Models;
+﻿using project_pharmacie.Models;
 
 namespace project_pharmacie.Data;
 
@@ -21,7 +20,7 @@ public static class DbSeeder
             Nom = "Admin Principal",
             Login = "admin",
             PasswordHash = "hash",
-            Role = AppRoles.Admin
+            Role = "ADMIN"
         };
 
         var personnels = new List<Personnel>();
@@ -32,7 +31,7 @@ public static class DbSeeder
                 Nom = $"Staff {i}",
                 Login = $"staff{i}",
                 PasswordHash = "hash",
-                Role = AppRoles.Personnel,
+                Role = "PERSONNEL",
                 Administrateur = admin
             });
         }
