@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
 using project_pharmacie.Services;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,18 +7,20 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales;
 
 public class CreateModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IClientService _clients;
+    private readonly IProduitService _produits;
     private readonly IVenteService _venteService;
 
-    public CreateModel(PharmacieDbContext db, IVenteService venteService)
+    public CreateModel(IClientService clients, IProduitService produits, IVenteService venteService)
     {
-        _db = db;
+        _clients = clients;
+        _produits = produits;
         _venteService = venteService;
     }
 
-    // Pour pré-sélectionner un client depuis History ("Refaire")
+    // Pré-sélection propre depuis History (Refaire) : on passe l'ID
     [BindProperty(SupportsGet = true)]
-    public string? CustomerHint { get; set; }
+    public string? ClientId { get; set; }
 
     [BindProperty]
     public SaleForm NewSale { get; set; } = new();
@@ -34,20 +34,9 @@ public class CreateModel : PageModel
     {
         await LoadListsAsync();
 
-        // Pré-sélection client via CustomerHint (nom exact)
-        if (!string.IsNullOrWhiteSpace(CustomerHint))
-        {
-            var hint = CustomerHint.Trim();
+        if (!string.IsNullOrWhiteSpace(ClientId))
+            NewSale.ClientId = ClientId.Trim();
 
-            var client = await _db.Clients.AsNoTracking()
-                .OrderBy(c => c.Name)
-                .FirstOrDefaultAsync(c => c.Name == hint);
-
-            if (client is not null)
-                NewSale.ClientId = client.Id;
-        }
-
-        // Par défaut : facture cochée
         NewSale.CreateInvoice = true;
     }
 
@@ -85,17 +74,19 @@ public class CreateModel : PageModel
 
     private async Task LoadListsAsync()
     {
-        Clients = await _db.Clients
-            .AsNoTracking()
-            .OrderBy(c => c.Name)
-            .Select(c => new ClientItem(c.Id, c.Name, c.LoyaltyPoints))
-            .ToListAsync();
+        // Clients (via service)
+        var clients = await _clients.SearchAsync(null);
+        Clients = clients
+            .OrderBy(c => c.Nom) // adapte: Nom / Name
+            .Select(c => new ClientItem(c.Id, c.Nom, c.PointsFidelite)) // adapte: PointsFidelite/LoyaltyPoints
+            .ToList();
 
-        Products = await _db.Produits
-            .AsNoTracking()
+        // Produits (via service)
+        var produits = await _produits.GetAllAsync(); // si ta méthode s'appelle différemment, adapte
+        Products = produits
             .OrderBy(p => p.Nom)
             .Select(p => new ProductItem(p.Reference, p.Nom, p.Quantite, p.Prix))
-            .ToListAsync();
+            .ToList();
     }
 
     public record ClientItem(string Id, string Name, int Points);
@@ -106,7 +97,6 @@ public class CreateModel : PageModel
         [Required(ErrorMessage = "Client requis")]
         public string ClientId { get; set; } = "";
 
-        // ProductId = Produit.Reference
         [Required(ErrorMessage = "Produit requis")]
         public string ProductId { get; set; } = "";
 
