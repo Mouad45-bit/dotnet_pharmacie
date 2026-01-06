@@ -4,7 +4,7 @@ using project_pharmacie.Models;
 
 namespace project_pharmacie.Services;
 
-public class ClientService
+public class ClientService : IClientService
 {
     private readonly PharmacieDbContext _db;
 
@@ -13,15 +13,30 @@ public class ClientService
         _db = db;
     }
 
-    public async Task<List<Client>> GetAllAsync()
+    public async Task<(List<Client> items, int total)> SearchAsync(string? q)
     {
-        return await _db.Clients
-            .AsNoTracking()
+        q = (q ?? "").Trim();
+
+        IQueryable<Client> query = _db.Clients.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            query = query.Where(c =>
+                c.Name.Contains(q) ||
+                (c.Email != null && c.Email.Contains(q)) ||
+                (c.Phone != null && c.Phone.Contains(q)));
+        }
+
+        var total = await query.CountAsync();
+
+        var items = await query
             .OrderBy(c => c.Name)
             .ToListAsync();
+
+        return (items, total);
     }
 
-    public async Task<Client?> GetAsync(string id)
+    public async Task<Client?> GetByIdAsync(string id)
     {
         if (string.IsNullOrWhiteSpace(id)) return null;
 
@@ -29,27 +44,23 @@ public class ClientService
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    // UNE SEULE méthode CreateAsync (c’est ça qui corrige CS0111)
-    public async Task<ServiceResult<Client>> CreateAsync(Client input)
+    public async Task<ServiceResult<Client>> CreateAsync(Client client)
     {
-        if (input is null)
+        if (client is null)
             return ServiceResult<Client>.Fail("Client invalide.");
 
-        var name = (input.Name ?? "").Trim();
+        var name = (client.Name ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
             return ServiceResult<Client>.Fail("Nom obligatoire.");
-
-        var email = (input.Email ?? "").Trim();
-        var phone = (input.Phone ?? "").Trim();
 
         var entity = new Client
         {
             Name = name,
-            Email = email,
-            Phone = phone,
-            LoyaltyPoints = input.LoyaltyPoints,
-            Status = string.IsNullOrWhiteSpace(input.Status) ? "Nouveau" : input.Status.Trim(),
-            PersonalizedOffer = (input.PersonalizedOffer ?? "").Trim()
+            Email = (client.Email ?? "").Trim(),
+            Phone = (client.Phone ?? "").Trim(),
+            LoyaltyPoints = client.LoyaltyPoints,
+            Status = string.IsNullOrWhiteSpace(client.Status) ? "Nouveau" : client.Status.Trim(),
+            PersonalizedOffer = (client.PersonalizedOffer ?? "").Trim()
         };
 
         _db.Clients.Add(entity);
@@ -58,25 +69,29 @@ public class ClientService
         return ServiceResult<Client>.Ok(entity);
     }
 
-    public async Task<ServiceResult> UpdateAsync(string id, Client input)
+    // ⚠️ signature attendue par TON interface : UpdateAsync(Client client)
+    public async Task<ServiceResult> UpdateAsync(Client client)
     {
-        if (string.IsNullOrWhiteSpace(id))
+        if (client is null)
+            return ServiceResult.Fail("Client invalide.");
+
+        if (string.IsNullOrWhiteSpace(client.Id))
             return ServiceResult.Fail("Id invalide.");
 
-        var existing = await _db.Clients.FirstOrDefaultAsync(c => c.Id == id);
+        var existing = await _db.Clients.FirstOrDefaultAsync(c => c.Id == client.Id);
         if (existing is null)
             return ServiceResult.Fail("Client introuvable.");
 
-        var name = (input.Name ?? "").Trim();
+        var name = (client.Name ?? "").Trim();
         if (string.IsNullOrWhiteSpace(name))
             return ServiceResult.Fail("Nom obligatoire.");
 
         existing.Name = name;
-        existing.Email = (input.Email ?? "").Trim();
-        existing.Phone = (input.Phone ?? "").Trim();
-        existing.LoyaltyPoints = input.LoyaltyPoints;
-        existing.Status = string.IsNullOrWhiteSpace(input.Status) ? existing.Status : input.Status.Trim();
-        existing.PersonalizedOffer = (input.PersonalizedOffer ?? "").Trim();
+        existing.Email = (client.Email ?? "").Trim();
+        existing.Phone = (client.Phone ?? "").Trim();
+        existing.LoyaltyPoints = client.LoyaltyPoints;
+        existing.Status = string.IsNullOrWhiteSpace(client.Status) ? existing.Status : client.Status.Trim();
+        existing.PersonalizedOffer = (client.PersonalizedOffer ?? "").Trim();
 
         await _db.SaveChangesAsync();
         return ServiceResult.Ok();
