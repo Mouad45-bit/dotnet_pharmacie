@@ -29,8 +29,7 @@ public class VenteService : IVenteService
 
         try
         {
-            // ⚠️ Ici on veut des entités TRACKÉES (pas AsNoTracking),
-            // car on modifie stock + points client
+            // TRACKÉ (pas AsNoTracking) car on modifie stock + points
             var client = await _db.Clients.FirstOrDefaultAsync(c => c.Id == clientId);
             if (client is null)
                 return ServiceResult<IVenteService.SaleCreatedInfo>.Fail("Client introuvable.");
@@ -47,14 +46,12 @@ public class VenteService : IVenteService
             var prixUnitaire = product.Prix;
             var total = quantity * prixUnitaire;
 
-            // 1) Vente
             var vente = new Vente
             {
                 ClientId = client.Id,
                 DateVente = DateTime.Now
             };
 
-            // 2) Ligne
             vente.Lignes.Add(new VenteLigne
             {
                 VenteId = vente.Id,
@@ -63,10 +60,10 @@ public class VenteService : IVenteService
                 PrixUnitaire = prixUnitaire
             });
 
-            // 3) Stock
+            // Stock
             product.Quantite -= quantity;
 
-            // 4) Facture (option)
+            // Facture (option)
             if (createInvoice)
             {
                 vente.Facture = new Facture
@@ -76,12 +73,11 @@ public class VenteService : IVenteService
                 };
             }
 
-            // 5) Fidélité (simple) : 1 point / 10 DH
+            // Fidélité : 1 point / 10 DH
             var pointsAdded = (int)Math.Floor((double)(total / 10m));
             if (pointsAdded > 0)
                 client.LoyaltyPoints += pointsAdded;
 
-            // Statut client (même règle que ton code)
             client.Status = client.LoyaltyPoints >= 120 ? "Or"
                         : client.LoyaltyPoints >= 60 ? "Argent"
                         : "Nouveau";
@@ -108,5 +104,68 @@ public class VenteService : IVenteService
             await tx.RollbackAsync();
             return ServiceResult<IVenteService.SaleCreatedInfo>.Fail("Erreur lors de l’enregistrement de la vente.");
         }
+    }
+
+    public async Task<ServiceResult<List<IVenteService.SaleHistoryItem>>> ListAsync(string? query = null)
+    {
+        var q = _db.Ventes
+            .AsNoTracking()
+            .Include(v => v.Client)
+            .Include(v => v.Lignes)
+                .ThenInclude(l => l.Produit)
+            .Include(v => v.Facture)
+            .AsQueryable();
+
+        // Recherche client/produit
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var term = query.Trim();
+
+            q = q.Where(v =>
+                (v.Client != null && EF.Functions.Like(v.Client.Name, $"%{term}%"))
+                ||
+                v.Lignes.Any(l =>
+                    EF.Functions.Like(l.ProduitReference, $"%{term}%")
+                    || (l.Produit != null && EF.Functions.Like(l.Produit.Nom, $"%{term}%"))
+                )
+            );
+        }
+
+        var list = await q
+            .OrderByDescending(v => v.DateVente)
+            .ToListAsync();
+
+        var rows = list.Select(v =>
+        {
+            var status = v.Facture != null ? "PAID" : "PENDING";
+
+            var qty = v.Lignes.Sum(l => l.Quantite);
+            var total = v.Lignes.Sum(l => l.Quantite * l.PrixUnitaire);
+
+            var productLabel = "-";
+            if (v.Lignes.Count == 1)
+            {
+                var l = v.Lignes.First();
+                productLabel = l.Produit?.Nom ?? l.ProduitReference;
+            }
+            else if (v.Lignes.Count > 1)
+            {
+                var first = v.Lignes.First();
+                var firstName = first.Produit?.Nom ?? first.ProduitReference;
+                productLabel = $"{firstName} (+{v.Lignes.Count - 1})";
+            }
+
+            return new IVenteService.SaleHistoryItem(
+                Id: v.Id,
+                CustomerName: v.Client?.Name ?? "-",
+                DrugName: productLabel,
+                Quantity: qty,
+                TotalPrice: total,
+                Status: status,
+                Date: v.DateVente
+            );
+        }).ToList();
+
+        return ServiceResult<List<IVenteService.SaleHistoryItem>>.Ok(rows);
     }
 }
