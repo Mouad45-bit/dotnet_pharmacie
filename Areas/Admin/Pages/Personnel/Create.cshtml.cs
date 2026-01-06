@@ -15,15 +15,17 @@ public class CreateModel : PageModel
     [BindProperty]
     public PersonnelForm Form { get; set; } = new();
 
-    public List<SelectListItem> RoleOptions { get; } =
-        Enum.GetValues<PersonnelPoste>()
-            .Select(r => new SelectListItem(r.ToString(), r.ToString()))
-            .ToList();
+    // ADMIN / PERSONNEL
+    public List<SelectListItem> RoleOptions { get; } = new()
+    {
+        new SelectListItem("Personnel", "PERSONNEL"),
+        new SelectListItem("Admin", "ADMIN")
+    };
 
     public void OnGet()
     {
         // valeur par défaut
-        Form.Poste = PersonnelPoste.Pharmacien;
+        Form.Role = "PERSONNEL";
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -33,12 +35,20 @@ public class CreateModel : PageModel
         if (string.IsNullOrWhiteSpace(Form.Login))
             ModelState.AddModelError("Form.Login", "Login obligatoire.");
 
+        // validation du rôle
+        var role = (Form.Role ?? "").Trim().ToUpperInvariant();
+        if (role is not ("ADMIN" or "PERSONNEL"))
+            ModelState.AddModelError("Form.Role", "Rôle invalide (ADMIN ou PERSONNEL).");
+
         if (!ModelState.IsValid)
         {
             TempData["FlashType"] = "error";
             TempData["FlashMessage"] = "Veuillez corriger les erreurs du formulaire.";
             return Page();
         }
+
+        // on normalise
+        Form.Role = role;
 
         var res = await _service.CreateAsync(Form);
 
