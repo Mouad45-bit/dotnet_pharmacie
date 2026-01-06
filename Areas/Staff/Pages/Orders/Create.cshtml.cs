@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
 using project_pharmacie.Services;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,17 +7,20 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
 {
     public class CreateModel : PageModel
     {
-        private readonly PharmacieDbContext _db;
+        private readonly IFournisseurService _fournisseurs;
+        private readonly IProduitService _produits;
         private readonly ICommandeService _commandeService;
 
-        public CreateModel(PharmacieDbContext db, ICommandeService commandeService)
+        public CreateModel(
+            IFournisseurService fournisseurs,
+            IProduitService produits,
+            ICommandeService commandeService)
         {
-            _db = db;
+            _fournisseurs = fournisseurs;
+            _produits = produits;
             _commandeService = commandeService;
         }
 
-        // Pour pré-sélectionner un fournisseur depuis /Suppliers (supplierId=...)
-        // Maintenant string (car Fournisseur.Id est string)
         [BindProperty(SupportsGet = true)]
         public string? SupplierId { get; set; }
 
@@ -35,11 +36,8 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
         {
             await LoadListsAsync();
 
-            // Pré-sélection fournisseur si query string fournie
             if (!string.IsNullOrWhiteSpace(SupplierId))
-            {
                 Form.SupplierId = SupplierId!;
-            }
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -52,7 +50,6 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
                 return Page();
             }
 
-            // ✅ Toute la logique DB est dans le service
             var result = await _commandeService.CreateAsync(Form.SupplierId, Form.ProductId, Form.Quantity);
 
             if (!result.Success)
@@ -70,21 +67,23 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
 
         private async Task LoadListsAsync()
         {
-            Suppliers = await _db.Fournisseurs
-                .AsNoTracking()
-                .OrderByDescending(s => s.NoteGlobale)
+            // Fournisseurs via service
+            var supplierList = await _fournisseurs.GetListAsync(null); // renvoie SupplierListItem (DTO)
+            Suppliers = supplierList
+                .OrderByDescending(s => s.NoteGlobale) // adapte si ton DTO a NoteGlobale
                 .ThenBy(s => s.Nom)
                 .Select(s => new SupplierItem(s.Id, s.Nom, s.NoteGlobale))
-                .ToListAsync();
+                .ToList();
 
-            Products = await _db.Produits
-                .AsNoTracking()
+            // Produits via service
+            var products = await _produits.GetAllAsync(); // adapte si méthode différente
+            Products = products
                 .OrderBy(p => p.Nom)
                 .Select(p => new ProductItem(p.Reference, p.Nom, p.Quantite))
-                .ToListAsync();
+                .ToList();
         }
 
-        public record SupplierItem(string Id, string Name, double Rating);
+        public record SupplierItem(string Id, string Name, int Rating);
         public record ProductItem(string Id, string Name, int Stock);
 
         public class CreateOrderForm
@@ -92,14 +91,12 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
             [Required(ErrorMessage = "Fournisseur requis")]
             public string SupplierId { get; set; } = "";
 
-            // ProductId = Produit.Reference (clé primaire string)
             [Required(ErrorMessage = "Produit requis")]
             public string ProductId { get; set; } = "";
 
             [Range(1, 999999, ErrorMessage = "Quantité invalide")]
             public int Quantity { get; set; } = 1;
 
-            // On garde le champ pour l'UI mais on ne le stocke pas ici
             [StringLength(200, ErrorMessage = "Note trop longue (max 200)")]
             public string? Note { get; set; }
         }
