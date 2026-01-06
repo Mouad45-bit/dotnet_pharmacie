@@ -1,32 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using project_pharmacie.Areas.Admin.Services;
+using project_pharmacie.Areas.Admin.ViewModels;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Admin.Pages.Personnel;
 
 public class CreateModel : PageModel
 {
+    private readonly IPersonnelService _service;
+
+    public CreateModel(IPersonnelService service) => _service = service;
+
     [BindProperty]
     public PersonnelForm Form { get; set; } = new();
 
     public List<SelectListItem> RoleOptions { get; } =
-        Enum.GetValues<PersonnelRole>()
+        Enum.GetValues<PersonnelPoste>()
             .Select(r => new SelectListItem(r.ToString(), r.ToString()))
             .ToList();
 
     public void OnGet()
     {
-        if (Form.Role == 0) Form.Role = PersonnelRole.Pharmacien;
-        Form.IsActive = true;
+        // valeur par défaut
+        Form.Poste = PersonnelPoste.Pharmacien;
     }
 
-    public IActionResult OnPost()
+    public async Task<IActionResult> OnPostAsync()
     {
-        if (string.IsNullOrWhiteSpace(Form.FullName))
-            ModelState.AddModelError("Form.FullName", "Nom complet obligatoire.");
-        if (string.IsNullOrWhiteSpace(Form.Email))
-            ModelState.AddModelError("Form.Email", "Email obligatoire.");
+        if (string.IsNullOrWhiteSpace(Form.Nom))
+            ModelState.AddModelError("Form.Nom", "Nom obligatoire.");
+        if (string.IsNullOrWhiteSpace(Form.Login))
+            ModelState.AddModelError("Form.Login", "Login obligatoire.");
 
         if (!ModelState.IsValid)
         {
@@ -35,12 +40,12 @@ public class CreateModel : PageModel
             return Page();
         }
 
-        var (ok, error, _) = PersonnelStore.Add(Form);
+        var res = await _service.CreateAsync(Form);
 
-        if (!ok)
+        if (!res.Success)
         {
             TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = error ?? "Erreur lors de la création.";
+            TempData["FlashMessage"] = res.Error ?? "Erreur lors de la création.";
             return Page();
         }
 
