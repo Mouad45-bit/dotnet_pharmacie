@@ -15,9 +15,9 @@ public class Commande
     public string FournisseurId { get; set; } = "";
     public Fournisseur? Fournisseur { get; set; }
 
-    // qui a passé la commande
+    // qui a passé la commande (user Identity)
     public string? PersonnelId { get; set; }
-    public Personnel? Personnel { get; set; }
+    public ApplicationUser? Personnel { get; set; }
 
     public ICollection<CommandeLigne> Lignes { get; set; } = new List<CommandeLigne>();
 }

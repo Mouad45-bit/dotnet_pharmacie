@@ -14,9 +14,9 @@ public class Produit
     public int Quantite { get; set; }
     public DateTime? DatePeremption { get; set; }
 
-    // géré par
+    // géré par un user Identity
     public string? PersonnelId { get; set; }
-    public Personnel? Personnel { get; set; }
+    public ApplicationUser? Personnel { get; set; }
 
     public ICollection<VenteLigne> VenteLignes { get; set; } = new List<VenteLigne>();
     public ICollection<CommandeLigne> CommandeLignes { get; set; } = new List<CommandeLigne>();
