@@ -17,3 +17,10 @@ public record SupplierListVm(
     string BestSupplierName,
     double BestSupplierRating
 );
+
+public record SupplierRateVm(
+    string SupplierId,
+    string SupplierName,
+    double CurrentRating,
+    int CurrentRatingsCount
+);
