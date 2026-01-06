@@ -9,4 +9,6 @@ public interface IClientService
 
     Task<Client?> GetByIdAsync(string id);
     Task<ServiceResult> UpdateAsync(Client client);
+
+    Task<ServiceResult<Client>> CreateAsync(Client client);
 }
