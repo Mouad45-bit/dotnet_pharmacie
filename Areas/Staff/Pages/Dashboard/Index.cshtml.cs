@@ -46,6 +46,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Dashboard
                 .OrderBy(p => p.Quantite)
                 .Select(p => new ProductRow(
                     p.Nom,
+                    p.Reference,
                     p.Quantite,
                     LowStockThreshold,
                     p.Prix,
@@ -58,6 +59,7 @@ namespace project_pharmacie.Areas.Staff.Pages.Dashboard
 
         public record ProductRow(
             string Name,
+            string Reference,
             int Stock,
             int ReorderLevel,
             decimal UnitPrice,
