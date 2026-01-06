@@ -1,4 +1,5 @@
-﻿using project_pharmacie.Models;
+﻿using project_pharmacie.Common;
+using project_pharmacie.Models;
 
 namespace project_pharmacie.Data;
 
@@ -20,7 +21,7 @@ public static class DbSeeder
             Nom = "Admin Principal",
             Login = "admin",
             PasswordHash = "hash",
-            Role = "ADMIN"
+            Role = AppRoles.Admin
         };
 
         var personnels = new List<Personnel>();
@@ -31,7 +32,7 @@ public static class DbSeeder
                 Nom = $"Staff {i}",
                 Login = $"staff{i}",
                 PasswordHash = "hash",
-                Role = "PERSONNEL",
+                Role = AppRoles.Personnel,
                 Administrateur = admin
             });
         }
@@ -67,6 +68,8 @@ public static class DbSeeder
         // -----------------------------
         // 3) Fournisseurs (12)
         // -----------------------------
+        // ⚠️ Assure-toi que Fournisseur.NoteGlobale est bien de type double/decimal si tu veux des notes 4.5, 4.7...
+        // Sinon, remplace par des int (4,5).
         var fournisseurs = new List<Fournisseur>
         {
             new Fournisseur { Nom = "PharmaSupply", NoteGlobale = 4.5 },
@@ -113,7 +116,7 @@ public static class DbSeeder
             var item = catalog[rng.Next(catalog.Length)];
             var prix = Math.Round(
                 item.PrixMin + (decimal)rng.NextDouble() * (item.PrixMax - item.PrixMin), 2
-             );
+            );
 
             var stock = rng.Next(0, 160);
             var refProd = $"P-{i:D4}";
