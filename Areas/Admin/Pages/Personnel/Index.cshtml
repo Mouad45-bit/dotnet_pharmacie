@@ -14,6 +14,7 @@
             + Ajouter
         </a>
     </div>
+
     <p class="mb-6 text-sm text-zinc-500">
         @Model.Total résultat(s)
         @if (!string.IsNullOrWhiteSpace(Model.Q))
@@ -30,7 +31,7 @@
             <div class="flex-1">
                 <label class="mb-1 block text-xs font-medium text-zinc-600">Recherche</label>
                 <input name="q" value="@Model.Q"
-                       placeholder="Nom, email, téléphone…"
+                       placeholder="Nom, login…"
                        class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
             </div>
 
@@ -70,9 +71,8 @@
                 <thead class="bg-zinc-50 text-zinc-600">
                     <tr>
                         <th class="px-4 py-3 font-medium">Nom</th>
-                        <th class="px-4 py-3 font-medium">Email</th>
+                        <th class="px-4 py-3 font-medium">Login</th>
                         <th class="px-4 py-3 font-medium">Rôle</th>
-                        <th class="px-4 py-3 font-medium">Statut</th>
                         <th class="px-4 py-3 font-medium text-right">Actions</th>
                     </tr>
                 </thead>
@@ -83,21 +83,12 @@
                             <td class="px-4 py-3">
                                 <a asp-area="Admin" asp-page="/Personnel/Details" asp-route-id="@p.Id"
                                    class="font-medium text-zinc-900 hover:underline">
-                                    @p.FullName
+                                    @p.Nom
                                 </a>
                             </td>
-                            <td class="px-4 py-3 text-zinc-700">@p.Email</td>
+
+                            <td class="px-4 py-3 text-zinc-700">@p.Login</td>
                             <td class="px-4 py-3 text-zinc-700">@p.Role</td>
-                            <td class="px-4 py-3">
-                                @if (p.IsActive)
-                                {
-                                    <span class="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">Actif</span>
-                                }
-                                else
-                                {
-                                    <span class="rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700">Inactif</span>
-                                }
-                            </td>
 
                             <td class="px-4 py-3 text-right">
                                 <div class="flex justify-end gap-2">
@@ -111,7 +102,7 @@
                                         <input type="hidden" name="q" value="@Model.Q" />
                                         <button type="submit"
                                                 class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
-                                                onclick="return confirm('Confirmer la suppression de @p.FullName ?');">
+                                                onclick="return confirm('Confirmer la suppression de @p.Nom ?');">
                                             Supprimer
                                         </button>
                                     </form>
