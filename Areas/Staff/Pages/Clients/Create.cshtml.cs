@@ -1,33 +1,35 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Data;
 using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Clients;
 
 public class CreateModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IClientService _clients;
 
-    public CreateModel(PharmacieDbContext db) => _db = db;
+    public CreateModel(IClientService clients) => _clients = clients;
 
     [BindProperty]
     public Client Client { get; set; } = new();
+
+    public void OnGet() { }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid) return Page();
 
-        // statut cohérent dès la création
-        Client.Status = Client.LoyaltyPoints >= 120 ? "Or"
-                     : Client.LoyaltyPoints >= 60 ? "Argent"
-                     : "Nouveau";
-
-        _db.Clients.Add(Client);
-        await _db.SaveChangesAsync();
+        var res = await _clients.CreateAsync(Client);
+        if (!res.Success)
+        {
+            TempData["FlashType"] = "error";
+            TempData["FlashMessage"] = res.Error ?? "Erreur lors de la création du client.";
+            return Page();
+        }
 
         TempData["FlashType"] = "success";
-        TempData["FlashMessage"] = $"Client {Client.Name} créé avec succès.";
+        TempData["FlashMessage"] = $"Client {res.Data?.Name ?? Client.Name} créé avec succès.";
         return RedirectToPage("./Index");
     }
 }
