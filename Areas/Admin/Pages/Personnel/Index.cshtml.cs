@@ -1,31 +1,36 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Areas.Admin.Services;
+using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Admin.Pages.Personnel;
 
 public class IndexModel : PageModel
 {
-    public List<Services.Personnel> Items { get; private set; } = new();
+    private readonly IPersonnelService _service;
+
+    public IndexModel(IPersonnelService service) => _service = service;
+
+    public List<Models.Personnel> Items { get; private set; } = new();
 
     [BindProperty(SupportsGet = true)]
     public string? Q { get; set; }
 
     public int Total => Items.Count;
 
-    public void OnGet()
+    public async Task OnGetAsync()
     {
-        Items = PersonnelStore.All(Q);
+        Items = await _service.SearchAsync(Q);
     }
 
-    public IActionResult OnPostDelete(string id)
+    public async Task<IActionResult> OnPostDeleteAsync(string id)
     {
-        var (ok, error) = PersonnelStore.Delete(id);
+        var res = await _service.DeleteAsync(id);
 
-        TempData["FlashType"] = ok ? "success" : "error";
-        TempData["FlashMessage"] = ok
+        TempData["FlashType"] = res.Success ? "success" : "error";
+        TempData["FlashMessage"] = res.Success
             ? "Personnel supprimé avec succès."
-            : (error ?? "Erreur lors de la suppression.");
+            : (res.Error ?? "Erreur lors de la suppression.");
 
         // garder la recherche après delete
         return RedirectToPage(new { q = Q });
