@@ -11,5 +11,4 @@ public class PersonnelForm
 {
     public string Nom { get; set; } = "";
     public string Login { get; set; } = "";
-    public PersonnelPoste Poste { get; set; } = PersonnelPoste.Pharmacien;
 }
