@@ -20,10 +20,12 @@ public class EditModel : PageModel
 
     public bool Found { get; private set; }
 
-    public List<SelectListItem> RoleOptions { get; } =
-        Enum.GetValues<PersonnelPoste>()
-            .Select(r => new SelectListItem(r.ToString(), r.ToString()))
-            .ToList();
+    // ADMIN / PERSONNEL
+    public List<SelectListItem> RoleOptions { get; } = new()
+    {
+        new SelectListItem("Personnel", "PERSONNEL"),
+        new SelectListItem("Admin", "ADMIN")
+    };
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -38,14 +40,16 @@ public class EditModel : PageModel
 
         Found = true;
 
-        // map Role (string) -> enum (fallback si valeur inconnue)
-        Enum.TryParse<PersonnelPoste>(p.Role, ignoreCase: true, out var poste);
+        // On garde uniquement ADMIN/PERSONNEL (fallback -> PERSONNEL)
+        var role = (p.Role ?? "").Trim().ToUpperInvariant();
+        if (role is not ("ADMIN" or "PERSONNEL"))
+            role = "PERSONNEL";
 
         Form = new PersonnelForm
         {
             Nom = p.Nom,
             Login = p.Login,
-            Poste = poste
+            Role = role
         };
 
         return Page();
@@ -53,7 +57,6 @@ public class EditModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        // pour ré-afficher correctement la page si erreur
         Found = true;
 
         if (string.IsNullOrWhiteSpace(Form.Nom))
@@ -61,12 +64,20 @@ public class EditModel : PageModel
         if (string.IsNullOrWhiteSpace(Form.Login))
             ModelState.AddModelError("Form.Login", "Login obligatoire.");
 
+        // validation du rôle
+        var role = (Form.Role ?? "").Trim().ToUpperInvariant();
+        if (role is not ("ADMIN" or "PERSONNEL"))
+            ModelState.AddModelError("Form.Role", "Rôle invalide (ADMIN ou PERSONNEL).");
+
         if (!ModelState.IsValid)
         {
             TempData["FlashType"] = "error";
             TempData["FlashMessage"] = "Veuillez corriger les erreurs du formulaire.";
             return Page();
         }
+
+        // on normalise avant d'envoyer au service
+        Form.Role = role;
 
         var res = await _service.UpdateAsync(Id, Form);
 
