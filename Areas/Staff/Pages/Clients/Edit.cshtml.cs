@@ -1,22 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Data;
 using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Clients;
 
 public class EditModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
+    private readonly IClientService _clients;
 
-    public EditModel(PharmacieDbContext db) => _db = db;
+    public EditModel(IClientService clients) => _clients = clients;
 
     [BindProperty]
     public Client Client { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync(string id)
     {
-        var client = await _db.Clients.FindAsync(id);
+        var client = await _clients.GetByIdAsync(id);
         if (client is null)
         {
             TempData["FlashType"] = "error";
@@ -32,26 +32,15 @@ public class EditModel : PageModel
     {
         if (!ModelState.IsValid) return Page();
 
-        var existing = await _db.Clients.FindAsync(Client.Id);
-        if (existing is null)
+        // On délègue l’update au service (validation + recalcul status)
+        var res = await _clients.UpdateAsync(Client);
+
+        if (!res.Success)
         {
             TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Client introuvable.";
+            TempData["FlashMessage"] = res.Error ?? "Erreur lors de la mise à jour.";
             return RedirectToPage("./Index");
         }
-
-        existing.Name = Client.Name;
-        existing.Email = Client.Email;
-        existing.Phone = Client.Phone;
-        existing.LoyaltyPoints = Client.LoyaltyPoints;
-        existing.PersonalizedOffer = Client.PersonalizedOffer;
-
-        // recalcul statut
-        existing.Status = existing.LoyaltyPoints >= 120 ? "Or"
-                       : existing.LoyaltyPoints >= 60 ? "Argent"
-                       : "Nouveau";
-
-        await _db.SaveChangesAsync();
 
         TempData["FlashType"] = "success";
         TempData["FlashMessage"] = "Dossier client mis à jour.";
