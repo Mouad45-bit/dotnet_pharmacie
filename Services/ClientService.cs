@@ -91,4 +91,26 @@ public class ClientService : IClientService
         await _db.SaveChangesAsync();
         return ServiceResult.Ok();
     }
+
+    public async Task<ServiceResult<Client>> CreateAsync(Client client)
+    {
+        if (string.IsNullOrWhiteSpace(client.Name))
+            return ServiceResult<Client>.Fail("Le nom est requis.");
+
+        client.Name = client.Name.Trim();
+        client.Email = client.Email?.Trim();
+        client.Phone = client.Phone?.Trim();
+
+        client.LoyaltyPoints = Math.Max(0, client.LoyaltyPoints);
+
+        // statut cohérent dès la création (comme ton code)
+        client.Status = client.LoyaltyPoints >= 120 ? "Or"
+                     : client.LoyaltyPoints >= 60 ? "Argent"
+                     : "Nouveau";
+
+        _db.Clients.Add(client);
+        await _db.SaveChangesAsync();
+
+        return ServiceResult<Client>.Ok(client);
+    }
 }
