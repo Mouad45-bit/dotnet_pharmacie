@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using project_pharmacie.Data;
-using project_pharmacie.Models;
+using project_pharmacie.Services;
 using System.ComponentModel.DataAnnotations;
 
 namespace project_pharmacie.Areas.Staff.Pages.Sales;
@@ -10,8 +10,13 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales;
 public class CreateModel : PageModel
 {
     private readonly PharmacieDbContext _db;
+    private readonly IVenteService _venteService;
 
-    public CreateModel(PharmacieDbContext db) => _db = db;
+    public CreateModel(PharmacieDbContext db, IVenteService venteService)
+    {
+        _db = db;
+        _venteService = venteService;
+    }
 
     // Pour pré-sélectionner un client depuis History ("Refaire")
     [BindProperty(SupportsGet = true)]
@@ -29,13 +34,13 @@ public class CreateModel : PageModel
     {
         await LoadListsAsync();
 
-        // Pré-sélection client via CustomerHint (nom)
+        // Pré-sélection client via CustomerHint (nom exact)
         if (!string.IsNullOrWhiteSpace(CustomerHint))
         {
             var hint = CustomerHint.Trim();
 
             var client = await _db.Clients.AsNoTracking()
-                .OrderByDescending(c => c.LoyaltyPoints)
+                .OrderBy(c => c.Name)
                 .FirstOrDefaultAsync(c => c.Name == hint);
 
             if (client is not null)
@@ -50,101 +55,32 @@ public class CreateModel : PageModel
     {
         await LoadListsAsync();
 
-        if (!ModelState.IsValid) return Page();
-
-        // Sécurité : client existant
-        var client = await _db.Clients.FirstOrDefaultAsync(c => c.Id == NewSale.ClientId);
-        if (client is null)
+        if (!ModelState.IsValid)
         {
-            ErrorMessage = "Client invalide.";
+            ErrorMessage = "Veuillez corriger les champs en erreur.";
             return Page();
         }
 
-        // Sécurité : produit existant (Produit.Reference)
-        var product = await _db.Produits.FirstOrDefaultAsync(p => p.Reference == NewSale.ProductId);
-        if (product is null)
+        var result = await _venteService.CreateAsync(
+            clientId: NewSale.ClientId,
+            productRef: NewSale.ProductId,
+            quantity: NewSale.Quantity,
+            createInvoice: NewSale.CreateInvoice
+        );
+
+        if (!result.Success)
         {
-            ErrorMessage = "Produit invalide.";
+            ErrorMessage = result.Error ?? "Impossible d’enregistrer la vente.";
             return Page();
         }
 
-        if (NewSale.Quantity <= 0)
-        {
-            ErrorMessage = "Quantité invalide.";
-            return Page();
-        }
+        var info = result.Data!;
+        TempData["Toast.Success"] =
+            $"Vente enregistrée : {info.Quantity} × {info.ProductName} pour {info.ClientName} " +
+            $"(Total: {info.Total:N2})" +
+            (info.InvoiceCreated ? " — Facture créée." : ".");
 
-        // Vérif stock
-        if (product.Quantite < NewSale.Quantity)
-        {
-            ErrorMessage = $"Stock insuffisant pour '{product.Nom}'. Stock actuel: {product.Quantite}.";
-            return Page();
-        }
-
-        // Calcul serveur
-        var prixUnitaire = product.Prix;
-        var total = NewSale.Quantity * prixUnitaire;
-
-        // Transaction (évite stock incohérent)
-        await using var tx = await _db.Database.BeginTransactionAsync();
-
-        try
-        {
-            // 1) Créer vente
-            var vente = new Vente
-            {
-                ClientId = client.Id,
-                DateVente = DateTime.Now
-            };
-
-            // 2) Ligne vente
-            vente.Lignes.Add(new VenteLigne
-            {
-                VenteId = vente.Id,
-                ProduitReference = product.Reference,
-                Quantite = NewSale.Quantity,
-                PrixUnitaire = prixUnitaire
-            });
-
-            // 3) Décrémenter stock
-            product.Quantite -= NewSale.Quantity;
-
-            // 4) (Option) Créer facture 1-1
-            if (NewSale.CreateInvoice)
-            {
-                vente.Facture = new Facture
-                {
-                    VenteId = vente.Id,
-                    Sujet = $"Facture vente {vente.Id}"
-                };
-            }
-
-            // 5) (Option simple) points fidélité : 1 point par 10 DH
-            var pointsAjoutes = (int)Math.Floor((double)(total / 10m));
-            if (pointsAjoutes > 0)
-                client.LoyaltyPoints += pointsAjoutes;
-
-            // Recalcul statut client (même logique que Clients/Edit)
-            client.Status = client.LoyaltyPoints >= 120 ? "Or"
-                         : client.LoyaltyPoints >= 60 ? "Argent"
-                         : "Nouveau";
-
-            _db.Ventes.Add(vente);
-            await _db.SaveChangesAsync();
-
-            await tx.CommitAsync();
-
-            TempData["Toast.Success"] =
-                $"Vente enregistrée : {NewSale.Quantity} × {product.Nom} pour {client.Name} (Total: {total:N2}).";
-
-            return RedirectToPage("./History");
-        }
-        catch
-        {
-            await tx.RollbackAsync();
-            ErrorMessage = "Erreur lors de l’enregistrement de la vente.";
-            return Page();
-        }
+        return RedirectToPage("./History");
     }
 
     private async Task LoadListsAsync()
