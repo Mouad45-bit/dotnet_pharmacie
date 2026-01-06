@@ -55,7 +55,7 @@ public class PersonnelService : IPersonnelService
             Nom = form.Nom.Trim(),
             Login = login,
             PasswordHash = "hash", // TODO: vraie auth plus tard
-            Role = form.Poste.ToString(), // "Pharmacien", "Caissier", ...
+            Role = "PERSONNEL",
             AdministrateurId = adminId
         };
 
@@ -84,7 +84,7 @@ public class PersonnelService : IPersonnelService
 
         p.Nom = form.Nom.Trim();
         p.Login = login;
-        p.Role = form.Poste.ToString();
+        p.Role = "PERSONNEL";
 
         await _db.SaveChangesAsync();
         return ServiceResult.Ok();
