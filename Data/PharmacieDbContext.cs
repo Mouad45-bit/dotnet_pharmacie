@@ -1,15 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using project_pharmacie.Models;
 
 namespace project_pharmacie.Data;
 
-public class PharmacieDbContext : DbContext
+public class PharmacieDbContext : IdentityDbContext<ApplicationUser>
 {
     public PharmacieDbContext(DbContextOptions<PharmacieDbContext> options) : base(options) { }
-
-    public DbSet<Utilisateur> Utilisateurs => Set<Utilisateur>();
-    public DbSet<Administrateur> Administrateurs => Set<Administrateur>();
-    public DbSet<Personnel> Personnels => Set<Personnel>();
 
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Produit> Produits => Set<Produit>();
@@ -28,35 +25,19 @@ public class PharmacieDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Utilisateur XOR (TPH)
-        modelBuilder.Entity<Utilisateur>()
-            .HasDiscriminator<string>("UserType")
-            .HasValue<Administrateur>("ADMIN")
-            .HasValue<Personnel>("PERSONNEL");
-
-        modelBuilder.Entity<Utilisateur>()
-            .HasIndex(u => u.Login)
-            .IsUnique();
-
-        // Admin 1..* Personnel
-        modelBuilder.Entity<Personnel>()
-            .HasOne(p => p.Administrateur)
-            .WithMany(a => a.Personnels)
-            .HasForeignKey(p => p.AdministrateurId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // Personnel 1..* Produit
+        // Produit géré par un user Identity (optionnel)
         modelBuilder.Entity<Produit>()
             .HasOne(p => p.Personnel)
-            .WithMany(s => s.ProduitsGeres)
+            .WithMany()
             .HasForeignKey(p => p.PersonnelId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        // Client 1..* Vente
-        modelBuilder.Entity<Vente>()
-            .HasOne(v => v.Client)
-            .WithMany(c => c.Ventes)
-            .HasForeignKey(v => v.ClientId);
+        // Commande passée par un user Identity (optionnel)
+        modelBuilder.Entity<Commande>()
+            .HasOne(c => c.Personnel)
+            .WithMany()
+            .HasForeignKey(c => c.PersonnelId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Vente 1-1 Facture
         modelBuilder.Entity<Facture>()
@@ -64,7 +45,7 @@ public class PharmacieDbContext : DbContext
             .WithOne(v => v.Facture)
             .HasForeignKey<Facture>(f => f.VenteId);
 
-        // VenteLigne (Vente N..N Produit + quantite/prix)
+        // VenteLigne (PK composite)
         modelBuilder.Entity<VenteLigne>()
             .HasKey(x => new { x.VenteId, x.ProduitReference });
 
@@ -78,7 +59,7 @@ public class PharmacieDbContext : DbContext
             .WithMany(p => p.VenteLignes)
             .HasForeignKey(x => x.ProduitReference);
 
-        // FournisseurProduit (Fournisseur N..N Produit)
+        // FournisseurProduit (PK composite)
         modelBuilder.Entity<FournisseurProduit>()
             .HasKey(x => new { x.FournisseurId, x.ProduitReference });
 
@@ -92,20 +73,7 @@ public class PharmacieDbContext : DbContext
             .WithMany(p => p.Fournisseurs)
             .HasForeignKey(x => x.ProduitReference);
 
-        // Fournisseur 1..* Commande
-        modelBuilder.Entity<Commande>()
-            .HasOne(c => c.Fournisseur)
-            .WithMany(f => f.Commandes)
-            .HasForeignKey(c => c.FournisseurId);
-
-        // Personnel 1..* Commande (passer commande)
-        modelBuilder.Entity<Commande>()
-            .HasOne(c => c.Personnel)
-            .WithMany(p => p.CommandesPassees)
-            .HasForeignKey(c => c.PersonnelId)
-            .OnDelete(DeleteBehavior.SetNull);
-
-        // CommandeLigne (Commande N..N Produit + quantite/prix)
+        // CommandeLigne (PK composite)
         modelBuilder.Entity<CommandeLigne>()
             .HasKey(x => new { x.CommandeId, x.ProduitReference });
 
@@ -119,7 +87,7 @@ public class PharmacieDbContext : DbContext
             .WithMany(p => p.CommandeLignes)
             .HasForeignKey(x => x.ProduitReference);
 
-        // Décimals (SQLite: important)
+        // Décimals
         modelBuilder.Entity<Produit>().Property(p => p.Prix).HasPrecision(18, 2);
         modelBuilder.Entity<VenteLigne>().Property(p => p.PrixUnitaire).HasPrecision(18, 2);
         modelBuilder.Entity<Commande>().Property(p => p.PrixTotal).HasPrecision(18, 2);
