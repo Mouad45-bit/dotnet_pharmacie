@@ -1,11 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Collections.Generic;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 
 namespace project_pharmacie.Areas.Staff.Pages.Dashboard
 {
     public class IndexModel : PageModel
     {
+        private readonly PharmacieDbContext _db;
+
+        public IndexModel(PharmacieDbContext db) => _db = db;
+
+        // Seuil simple (si tu n’as pas encore un champ ReorderLevel/Seuil en DB)
+        public const int LowStockThreshold = 5;
+
         public int KpiTotalProducts { get; private set; }
         public int KpiLowStockCount { get; private set; }
         public int KpiTotalUnits { get; private set; }
@@ -13,32 +20,44 @@ namespace project_pharmacie.Areas.Staff.Pages.Dashboard
 
         public List<ProductRow> LowStockProducts { get; private set; } = new();
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            var products = new List<ProductRow>
-            {
-                new("Doliprane 1g", "Antalgique", 12, 10, 18.50m, "MedicaPlus"),
-                new("Vitamine C", "Compléments", 3, 8, 45.00m, "BioSup"),
-                new("Aerius", "Allergie", 0, 5, 79.90m, "PharmaDist"),
-                new("Smecta", "Digestif", 6, 6, 34.00m, "MedicaPlus"),
-                new("Biseptine", "Antiseptique", 25, 10, 32.00m, "PharmaDist"),
-            };
+            // KPIs réels depuis la DB
+            KpiTotalProducts = await _db.Produits
+                .AsNoTracking()
+                .CountAsync();
 
-            KpiTotalProducts = products.Count;
-            KpiTotalUnits = products.Sum(p => p.Stock);
-            KpiStockValueMad = products.Sum(p => p.Stock * p.UnitPrice);
+            KpiTotalUnits = await _db.Produits
+                .AsNoTracking()
+                .SumAsync(p => (int?)p.Quantite) ?? 0;
 
-            LowStockProducts = products
-                .Where(p => p.Stock <= p.ReorderLevel)
-                .OrderBy(p => p.Stock)
-                .ToList();
+            KpiStockValueMad = await _db.Produits
+                .AsNoTracking()
+                .SumAsync(p => (decimal?)p.Quantite * p.Prix) ?? 0m;
 
-            KpiLowStockCount = LowStockProducts.Count;
+            KpiLowStockCount = await _db.Produits
+                .AsNoTracking()
+                .CountAsync(p => p.Quantite <= LowStockThreshold);
+
+            // Produits en alerte (stock <= seuil)
+            LowStockProducts = await _db.Produits
+                .AsNoTracking()
+                .Where(p => p.Quantite <= LowStockThreshold)
+                .OrderBy(p => p.Quantite)
+                .Select(p => new ProductRow(
+                    p.Nom,
+                    p.Quantite,
+                    LowStockThreshold,
+                    p.Prix,
+                    p.Fournisseurs
+                        .Select(fp => fp.Fournisseur != null ? fp.Fournisseur.Nom : null)
+                        .FirstOrDefault() ?? "—"
+                ))
+                .ToListAsync();
         }
 
         public record ProductRow(
             string Name,
-            string Category,
             int Stock,
             int ReorderLevel,
             decimal UnitPrice,
