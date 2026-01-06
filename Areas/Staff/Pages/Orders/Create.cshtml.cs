@@ -1,104 +1,101 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
+using project_pharmacie.Data;
 using project_pharmacie.Services;
 using System.ComponentModel.DataAnnotations;
 
-namespace project_pharmacie.Areas.Staff.Pages.Orders
+namespace project_pharmacie.Areas.Staff.Pages.Orders;
+
+public class CreateModel : PageModel
 {
-    public class CreateModel : PageModel
+    private readonly PharmacieDbContext _db;
+    private readonly ICommandeService _commandeService;
+
+    public CreateModel(PharmacieDbContext db, ICommandeService commandeService)
     {
-        private readonly IFournisseurService _fournisseurs;
-        private readonly IProduitService _produits;
-        private readonly ICommandeService _commandeService;
+        _db = db;
+        _commandeService = commandeService;
+    }
 
-        public CreateModel(
-            IFournisseurService fournisseurs,
-            IProduitService produits,
-            ICommandeService commandeService)
+    // Pour pré-sélectionner un fournisseur depuis /Suppliers (supplierId=...)
+    [BindProperty(SupportsGet = true)]
+    public string? SupplierId { get; set; }
+
+    [BindProperty]
+    public CreateOrderForm Form { get; set; } = new();
+
+    public string? ErrorMessage { get; private set; }
+
+    public List<SupplierItem> Suppliers { get; private set; } = new();
+    public List<ProductItem> Products { get; private set; } = new();
+
+    public async Task OnGetAsync()
+    {
+        await LoadListsAsync();
+
+        if (!string.IsNullOrWhiteSpace(SupplierId))
+            Form.SupplierId = SupplierId!;
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        await LoadListsAsync();
+
+        if (!ModelState.IsValid)
         {
-            _fournisseurs = fournisseurs;
-            _produits = produits;
-            _commandeService = commandeService;
+            ErrorMessage = "Veuillez corriger les champs en erreur.";
+            return Page();
         }
 
-        [BindProperty(SupportsGet = true)]
-        public string? SupplierId { get; set; }
+        // Toute la logique DB “métier” est dans le service
+        var result = await _commandeService.CreateAsync(Form.SupplierId, Form.ProductId, Form.Quantity);
 
-        [BindProperty]
-        public CreateOrderForm Form { get; set; } = new();
-
-        public string? ErrorMessage { get; private set; }
-
-        public List<SupplierItem> Suppliers { get; private set; } = new();
-        public List<ProductItem> Products { get; private set; } = new();
-
-        public async Task OnGetAsync()
+        if (!result.Success)
         {
-            await LoadListsAsync();
-
-            if (!string.IsNullOrWhiteSpace(SupplierId))
-                Form.SupplierId = SupplierId!;
+            ErrorMessage = result.Error ?? "Impossible de créer la commande.";
+            return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
-        {
-            await LoadListsAsync();
+        var info = result.Data!;
+        TempData["Toast.Success"] =
+            $"Commande créée : {Form.Quantity} × {info.ProductName} chez {info.SupplierName} (Total: {info.Total:N2}).";
 
-            if (!ModelState.IsValid)
-            {
-                ErrorMessage = "Veuillez corriger les champs en erreur.";
-                return Page();
-            }
+        return RedirectToPage("/Orders/History", new { area = "Staff" });
+    }
 
-            var result = await _commandeService.CreateAsync(Form.SupplierId, Form.ProductId, Form.Quantity);
+    private async Task LoadListsAsync()
+    {
+        Suppliers = await _db.Fournisseurs
+            .AsNoTracking()
+            .OrderByDescending(s => s.NoteGlobale)
+            .ThenBy(s => s.Nom)
+            .Select(s => new SupplierItem(s.Id, s.Nom, s.NoteGlobale))
+            .ToListAsync();
 
-            if (!result.Success)
-            {
-                ErrorMessage = result.Error ?? "Impossible de créer la commande.";
-                return Page();
-            }
+        Products = await _db.Produits
+            .AsNoTracking()
+            .OrderBy(p => p.Nom)
+            .Select(p => new ProductItem(p.Reference, p.Nom, p.Quantite))
+            .ToListAsync();
+    }
 
-            var info = result.Data!;
-            TempData["Toast.Success"] =
-                $"Commande créée : {Form.Quantity} × {info.ProductName} chez {info.SupplierName} (Total: {info.Total:N2}).";
+    public record SupplierItem(string Id, string Name, double Rating);
+    public record ProductItem(string Id, string Name, int Stock);
 
-            return RedirectToPage("/Orders/History", new { area = "Staff" });
-        }
+    public class CreateOrderForm
+    {
+        [Required(ErrorMessage = "Fournisseur requis")]
+        public string SupplierId { get; set; } = "";
 
-        private async Task LoadListsAsync()
-        {
-            // Fournisseurs via service
-            var supplierList = await _fournisseurs.GetListAsync(null); // renvoie SupplierListItem (DTO)
-            Suppliers = supplierList
-                .OrderByDescending(s => s.NoteGlobale) // adapte si ton DTO a NoteGlobale
-                .ThenBy(s => s.Nom)
-                .Select(s => new SupplierItem(s.Id, s.Nom, s.NoteGlobale))
-                .ToList();
+        // ProductId = Produit.Reference (clé primaire string)
+        [Required(ErrorMessage = "Produit requis")]
+        public string ProductId { get; set; } = "";
 
-            // Produits via service
-            var products = await _produits.GetAllAsync(); // adapte si méthode différente
-            Products = products
-                .OrderBy(p => p.Nom)
-                .Select(p => new ProductItem(p.Reference, p.Nom, p.Quantite))
-                .ToList();
-        }
+        [Range(1, 999999, ErrorMessage = "Quantité invalide")]
+        public int Quantity { get; set; } = 1;
 
-        public record SupplierItem(string Id, string Name, int Rating);
-        public record ProductItem(string Id, string Name, int Stock);
-
-        public class CreateOrderForm
-        {
-            [Required(ErrorMessage = "Fournisseur requis")]
-            public string SupplierId { get; set; } = "";
-
-            [Required(ErrorMessage = "Produit requis")]
-            public string ProductId { get; set; } = "";
-
-            [Range(1, 999999, ErrorMessage = "Quantité invalide")]
-            public int Quantity { get; set; } = 1;
-
-            [StringLength(200, ErrorMessage = "Note trop longue (max 200)")]
-            public string? Note { get; set; }
-        }
+        [StringLength(200, ErrorMessage = "Note trop longue (max 200)")]
+        public string? Note { get; set; }
     }
 }
