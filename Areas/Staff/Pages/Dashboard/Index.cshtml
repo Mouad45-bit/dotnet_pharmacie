@@ -38,7 +38,7 @@
         <div class="rounded-2xl border bg-white p-4">
             <p class="text-sm text-zinc-500">Produits en alerte</p>
             <p class="mt-2 text-2xl font-semibold text-zinc-900">@Model.KpiLowStockCount</p>
-            <p class="mt-1 text-xs text-zinc-500">stock ≤ seuil</p>
+            <p class="mt-1 text-xs text-zinc-500">stock ≤ @project_pharmacie.Areas.Staff.Pages.Dashboard.IndexModel.LowStockThreshold</p>
         </div>
 
         <div class="rounded-2xl border bg-white p-4">
@@ -70,10 +70,11 @@
             <thead class="bg-zinc-50 text-zinc-600">
                 <tr>
                     <th class="px-4 py-3 font-medium">Produit</th>
-                    <th class="px-4 py-3 font-medium">Catégorie</th>
+                    <th class="px-4 py-3 font-medium">Référence</th>
                     <th class="px-4 py-3 font-medium">Stock</th>
                     <th class="px-4 py-3 font-medium">Seuil</th>
-                    <th class="px-4 py-3 font-medium text-right">Action</th>
+                    <th class="px-4 py-3 font-medium">Fournisseur</th>
+                    <th class="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
             </thead>
 
@@ -81,7 +82,7 @@
                 @if (Model.LowStockProducts == null || Model.LowStockProducts.Count == 0)
                 {
                     <tr>
-                        <td colspan="5" class="px-4 py-10 text-center">
+                        <td colspan="6" class="px-4 py-10 text-center">
                             <p class="text-base font-semibold">Aucun produit en alerte</p>
                             <p class="mt-1 text-sm text-zinc-500">Le stock est stable pour le moment.</p>
                         </td>
@@ -98,7 +99,9 @@
                             <td class="px-4 py-3">
                                 <span class="font-medium text-zinc-900">@p.Name</span>
                             </td>
-                            <td class="px-4 py-3 text-zinc-700">@p.Category</td>
+
+                            <td class="px-4 py-3 text-zinc-700">@p.Reference</td>
+
                             <td class="px-4 py-3">
                                 @if (isOut)
                                 {
@@ -113,12 +116,23 @@
                                     </span>
                                 }
                             </td>
+
                             <td class="px-4 py-3 text-zinc-700">@p.ReorderLevel</td>
+
+                            <td class="px-4 py-3 text-zinc-700">@p.SupplierHint</td>
+
                             <td class="px-4 py-3 text-right">
-                                <a asp-area="Staff" asp-page="/Orders/Create" asp-route-supplierHint="@p.SupplierHint"
-                                   class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
-                                    Commander
-                                </a>
+                                <div class="flex justify-end gap-2">
+                                    <a asp-area="Staff" asp-page="/Products/Edit" asp-route-id="@p.Reference"
+                                       class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                        Modifier
+                                    </a>
+
+                                    <a asp-area="Staff" asp-page="/Orders/Create"
+                                       class="rounded-xl border bg-white px-3 py-1.5 text-sm hover:bg-zinc-50">
+                                        Commander
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     }
