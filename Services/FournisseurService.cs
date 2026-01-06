@@ -19,7 +19,11 @@ public class FournisseurService : IFournisseurService
             {
                 f.Id,
                 Name = f.Nom,
-                Phone = f.Telephone,
+
+                // ✅ FIX: la propriété Telephone n’existe pas dans ton modèle
+                // Si plus tard tu ajoutes un champ tel, remplace "" par f.Tel ou f.Phone.
+                Phone = "",
+
                 Rating = (double)f.NoteGlobale,
                 RatingsCount = commandes.Count()
             }
