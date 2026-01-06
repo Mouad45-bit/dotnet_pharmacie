@@ -1,12 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using project_pharmacie.Areas.Admin.Services;
+using project_pharmacie.Areas.Admin.ViewModels;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Admin.Pages.Personnel;
 
 public class EditModel : PageModel
 {
+    private readonly IPersonnelService _service;
+
+    public EditModel(IPersonnelService service) => _service = service;
+
     [BindProperty(SupportsGet = true)]
     public string Id { get; set; } = "";
 
@@ -16,13 +21,13 @@ public class EditModel : PageModel
     public bool Found { get; private set; }
 
     public List<SelectListItem> RoleOptions { get; } =
-        Enum.GetValues<PersonnelRole>()
+        Enum.GetValues<PersonnelPoste>()
             .Select(r => new SelectListItem(r.ToString(), r.ToString()))
             .ToList();
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync()
     {
-        var p = PersonnelStore.Get(Id);
+        var p = await _service.GetAsync(Id);
         if (p is null)
         {
             Found = false;
@@ -32,35 +37,29 @@ public class EditModel : PageModel
         }
 
         Found = true;
+
+        // map Role (string) -> enum (fallback si valeur inconnue)
+        Enum.TryParse<PersonnelPoste>(p.Role, ignoreCase: true, out var poste);
+
         Form = new PersonnelForm
         {
-            FullName = p.FullName,
-            Email = p.Email,
-            Phone = p.Phone,
-            Role = p.Role,
-            IsActive = p.IsActive
+            Nom = p.Nom,
+            Login = p.Login,
+            Poste = poste
         };
 
         return Page();
     }
 
-    public IActionResult OnPost()
+    public async Task<IActionResult> OnPostAsync()
     {
-        var existing = PersonnelStore.Get(Id);
-        if (existing is null)
-        {
-            Found = false;
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Personnel introuvable.";
-            return Page();
-        }
-
+        // pour ré-afficher correctement la page si erreur
         Found = true;
 
-        if (string.IsNullOrWhiteSpace(Form.FullName))
-            ModelState.AddModelError("Form.FullName", "Nom complet obligatoire.");
-        if (string.IsNullOrWhiteSpace(Form.Email))
-            ModelState.AddModelError("Form.Email", "Email obligatoire.");
+        if (string.IsNullOrWhiteSpace(Form.Nom))
+            ModelState.AddModelError("Form.Nom", "Nom obligatoire.");
+        if (string.IsNullOrWhiteSpace(Form.Login))
+            ModelState.AddModelError("Form.Login", "Login obligatoire.");
 
         if (!ModelState.IsValid)
         {
@@ -69,12 +68,12 @@ public class EditModel : PageModel
             return Page();
         }
 
-        var (ok, error) = PersonnelStore.Update(Id, Form);
+        var res = await _service.UpdateAsync(Id, Form);
 
-        if (!ok)
+        if (!res.Success)
         {
             TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = error ?? "Erreur lors de la mise à jour.";
+            TempData["FlashMessage"] = res.Error ?? "Erreur lors de la mise à jour.";
             return Page();
         }
 
