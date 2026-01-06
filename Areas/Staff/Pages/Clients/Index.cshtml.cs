@@ -1,16 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
 using project_pharmacie.Models;
+using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Staff.Pages.Clients;
 
 public class IndexModel : PageModel
 {
-    private readonly PharmacieDbContext _db;
-
-    public IndexModel(PharmacieDbContext db) => _db = db;
+    private readonly IClientService _clients;
+    public IndexModel(IClientService clients) => _clients = clients;
 
     [BindProperty(SupportsGet = true)]
     public string? Q { get; set; }
@@ -20,42 +18,17 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var query = _db.Clients.AsNoTracking();
-
-        if (!string.IsNullOrWhiteSpace(Q))
-        {
-            var q = Q.Trim();
-            query = query.Where(c =>
-                EF.Functions.Like(c.Name, $"%{q}%") ||
-                EF.Functions.Like(c.Email, $"%{q}%")
-            );
-        }
-
-        Clients = await query
-            .OrderBy(c => c.Name)
-            .ToListAsync();
-
-        Total = Clients.Count;
+        (Clients, Total) = await _clients.SearchAsync(Q);
     }
 
-    // Handler appelé par: <form method="post" asp-page-handler="Delete">
     public async Task<IActionResult> OnPostDeleteAsync(string id, string? q)
     {
         Q = q;
 
-        var client = await _db.Clients.FindAsync(id);
-        if (client is null)
-        {
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Client introuvable.";
-            return RedirectToPage(new { q = Q });
-        }
+        var res = await _clients.DeleteAsync(id);
+        TempData["FlashType"] = res.Success ? "success" : "error";
+        TempData["FlashMessage"] = res.Success ? "Client supprimé." : (res.Error ?? "Erreur.");
 
-        _db.Clients.Remove(client);
-        await _db.SaveChangesAsync();
-
-        TempData["FlashType"] = "success";
-        TempData["FlashMessage"] = $"Client supprimé : {client.Name}.";
         return RedirectToPage(new { q = Q });
     }
 }
