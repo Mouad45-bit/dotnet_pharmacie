@@ -62,4 +62,49 @@ public class FournisseurService : IFournisseurService
             BestSupplierRating: bestRating
         );
     }
+
+    public async Task<SupplierRateVm?> GetRatePageAsync(string supplierId)
+    {
+        if (string.IsNullOrWhiteSpace(supplierId))
+            return null;
+
+        var s = await _db.Fournisseurs.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == supplierId);
+
+        if (s is null) return null;
+
+        var count = await _db.Commandes.AsNoTracking()
+            .CountAsync(c => c.FournisseurId == s.Id);
+
+        return new SupplierRateVm(
+            SupplierId: s.Id,
+            SupplierName: s.Nom,
+            CurrentRating: s.NoteGlobale,
+            CurrentRatingsCount: count
+        );
+    }
+
+    public async Task<ServiceResult> RateAsync(string supplierId, int rating, string? comment)
+    {
+        if (string.IsNullOrWhiteSpace(supplierId))
+            return ServiceResult.Fail("Fournisseur introuvable.");
+
+        if (rating < 1 || rating > 5)
+            return ServiceResult.Fail("La note doit être entre 1 et 5.");
+
+        var supplier = await _db.Fournisseurs
+            .FirstOrDefaultAsync(x => x.Id == supplierId);
+
+        if (supplier is null)
+            return ServiceResult.Fail("Fournisseur introuvable.");
+
+        // MVP : overwrite (comme ton code)
+        supplier.NoteGlobale = rating;
+
+        // Commentaire : pour l’instant tu ne le stockes nulle part.
+        // Si plus tard tu ajoutes une table FournisseurRating, on le persistera ici.
+
+        await _db.SaveChangesAsync();
+        return ServiceResult.Ok();
+    }
 }
