@@ -4,75 +4,79 @@ using project_pharmacie.Models;
 
 namespace project_pharmacie.Services;
 
-public class ClientService : IClientService
+public class ClientService
 {
     private readonly PharmacieDbContext _db;
-    public ClientService(PharmacieDbContext db) => _db = db;
 
-    public async Task<(List<Client> items, int total)> SearchAsync(string? q)
+    public ClientService(PharmacieDbContext db)
     {
-        var query = _db.Clients.AsNoTracking();
-
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            q = q.Trim();
-            query = query.Where(c =>
-                EF.Functions.Like(c.Name, $"%{q}%") ||
-                EF.Functions.Like(c.Email, $"%{q}%")
-            );
-        }
-
-        var total = await query.CountAsync();
-        var items = await query.OrderBy(c => c.Name).ToListAsync();
-        return (items, total);
+        _db = db;
     }
 
-    public Task<Client?> GetByIdAsync(string id)
-        => _db.Clients.FirstOrDefaultAsync(c => c.Id == id);
-
-    public async Task<ServiceResult<Client>> CreateAsync(Client client)
+    public async Task<List<Client>> GetAllAsync()
     {
-        if (string.IsNullOrWhiteSpace(client.Name))
-            return ServiceResult<Client>.Fail("Le nom est requis.");
+        return await _db.Clients
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .ToListAsync();
+    }
 
-        client.Name = client.Name.Trim();
-        client.Email = client.Email?.Trim();
-        client.Phone = client.Phone?.Trim();
+    public async Task<Client?> GetAsync(string id)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return null;
 
-        // Statut initial
-        client.LoyaltyPoints = Math.Max(0, client.LoyaltyPoints);
-        client.Status = client.LoyaltyPoints >= 120 ? "Or"
-                     : client.LoyaltyPoints >= 60 ? "Argent"
-                     : "Nouveau";
+        return await _db.Clients
+            .FirstOrDefaultAsync(c => c.Id == id);
+    }
 
-        _db.Clients.Add(client);
+    // UNE SEULE méthode CreateAsync (c’est ça qui corrige CS0111)
+    public async Task<ServiceResult<Client>> CreateAsync(Client input)
+    {
+        if (input is null)
+            return ServiceResult<Client>.Fail("Client invalide.");
+
+        var name = (input.Name ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return ServiceResult<Client>.Fail("Nom obligatoire.");
+
+        var email = (input.Email ?? "").Trim();
+        var phone = (input.Phone ?? "").Trim();
+
+        var entity = new Client
+        {
+            Name = name,
+            Email = email,
+            Phone = phone,
+            LoyaltyPoints = input.LoyaltyPoints,
+            Status = string.IsNullOrWhiteSpace(input.Status) ? "Nouveau" : input.Status.Trim(),
+            PersonalizedOffer = (input.PersonalizedOffer ?? "").Trim()
+        };
+
+        _db.Clients.Add(entity);
         await _db.SaveChangesAsync();
 
-        return ServiceResult<Client>.Ok(client);
+        return ServiceResult<Client>.Ok(entity);
     }
 
-    public async Task<ServiceResult> UpdateAsync(Client client)
+    public async Task<ServiceResult> UpdateAsync(string id, Client input)
     {
-        if (string.IsNullOrWhiteSpace(client.Id))
-            return ServiceResult.Fail("ID client invalide.");
+        if (string.IsNullOrWhiteSpace(id))
+            return ServiceResult.Fail("Id invalide.");
 
-        if (string.IsNullOrWhiteSpace(client.Name))
-            return ServiceResult.Fail("Le nom est requis.");
-
-        var existing = await _db.Clients.FindAsync(client.Id);
+        var existing = await _db.Clients.FirstOrDefaultAsync(c => c.Id == id);
         if (existing is null)
             return ServiceResult.Fail("Client introuvable.");
 
-        existing.Name = client.Name.Trim();
-        existing.Email = client.Email?.Trim();
-        existing.Phone = client.Phone?.Trim();
-        existing.PersonalizedOffer = client.PersonalizedOffer;
-        existing.LoyaltyPoints = Math.Max(0, client.LoyaltyPoints);
+        var name = (input.Name ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return ServiceResult.Fail("Nom obligatoire.");
 
-        // recalcul statut (comme ton code actuel)
-        existing.Status = existing.LoyaltyPoints >= 120 ? "Or"
-                       : existing.LoyaltyPoints >= 60 ? "Argent"
-                       : "Nouveau";
+        existing.Name = name;
+        existing.Email = (input.Email ?? "").Trim();
+        existing.Phone = (input.Phone ?? "").Trim();
+        existing.LoyaltyPoints = input.LoyaltyPoints;
+        existing.Status = string.IsNullOrWhiteSpace(input.Status) ? existing.Status : input.Status.Trim();
+        existing.PersonalizedOffer = (input.PersonalizedOffer ?? "").Trim();
 
         await _db.SaveChangesAsync();
         return ServiceResult.Ok();
@@ -80,37 +84,16 @@ public class ClientService : IClientService
 
     public async Task<ServiceResult> DeleteAsync(string id)
     {
-        var client = await _db.Clients.FindAsync(id);
-        if (client is null) return ServiceResult.Fail("Client introuvable.");
+        if (string.IsNullOrWhiteSpace(id))
+            return ServiceResult.Fail("Id invalide.");
 
-        // (Option) bloquer si ventes existent
-        // if (await _db.Ventes.AnyAsync(v => v.ClientId == id))
-        //     return ServiceResult.Fail("Suppression impossible : ce client a des ventes.");
+        var existing = await _db.Clients.FirstOrDefaultAsync(c => c.Id == id);
+        if (existing is null)
+            return ServiceResult.Fail("Client introuvable.");
 
-        _db.Clients.Remove(client);
+        _db.Clients.Remove(existing);
         await _db.SaveChangesAsync();
+
         return ServiceResult.Ok();
-    }
-
-    public async Task<ServiceResult<Client>> CreateAsync(Client client)
-    {
-        if (string.IsNullOrWhiteSpace(client.Name))
-            return ServiceResult<Client>.Fail("Le nom est requis.");
-
-        client.Name = client.Name.Trim();
-        client.Email = client.Email?.Trim();
-        client.Phone = client.Phone?.Trim();
-
-        client.LoyaltyPoints = Math.Max(0, client.LoyaltyPoints);
-
-        // statut cohérent dès la création (comme ton code)
-        client.Status = client.LoyaltyPoints >= 120 ? "Or"
-                     : client.LoyaltyPoints >= 60 ? "Argent"
-                     : "Nouveau";
-
-        _db.Clients.Add(client);
-        await _db.SaveChangesAsync();
-
-        return ServiceResult<Client>.Ok(client);
     }
 }
