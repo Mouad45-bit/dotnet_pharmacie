@@ -1,51 +1,84 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using project_pharmacie.Areas.Admin.Services;
+using project_pharmacie.Models;
+using System.ComponentModel.DataAnnotations;
 
-namespace project_pharmacie.Areas.Admin.Pages.Personnel;
-
-public class CreateModel : PageModel
+namespace project_pharmacie.Areas.Admin.Pages.Personnel
 {
-    [BindProperty]
-    public PersonnelForm Form { get; set; } = new();
+	// Sécurité : Seul l'admin peut accéder ici
+	[Authorize(Roles = "Administrateur")]
+	public class CreateModel : PageModel
+	{
+		private readonly UserManager<ApplicationUser> _userManager;
+		private readonly RoleManager<IdentityRole> _roleManager;
 
-    public List<SelectListItem> RoleOptions { get; } =
-        Enum.GetValues<PersonnelRole>()
-            .Select(r => new SelectListItem(r.ToString(), r.ToString()))
-            .ToList();
+		public CreateModel(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+		{
+			_userManager = userManager;
+			_roleManager = roleManager;
+		}
 
-    public void OnGet()
-    {
-        if (Form.Role == 0) Form.Role = PersonnelRole.Pharmacien;
-        Form.IsActive = true;
-    }
+		[BindProperty]
+		public InputModel Input { get; set; }
 
-    public IActionResult OnPost()
-    {
-        if (string.IsNullOrWhiteSpace(Form.FullName))
-            ModelState.AddModelError("Form.FullName", "Nom complet obligatoire.");
-        if (string.IsNullOrWhiteSpace(Form.Email))
-            ModelState.AddModelError("Form.Email", "Email obligatoire.");
+		public class InputModel
+		{
+			[Required(ErrorMessage = "Le nom est obligatoire")]
+			public string FullName { get; set; }
 
-        if (!ModelState.IsValid)
-        {
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = "Veuillez corriger les erreurs du formulaire.";
-            return Page();
-        }
+			[Required(ErrorMessage = "L'email est obligatoire")]
+			[EmailAddress]
+			public string Email { get; set; }
 
-        var (ok, error, _) = PersonnelStore.Add(Form);
+			// LE CHAMP MOT DE PASSE EST ICI 👇
+			[Required(ErrorMessage = "Le mot de passe est obligatoire")]
+			[DataType(DataType.Password)]
+			public string Password { get; set; }
 
-        if (!ok)
-        {
-            TempData["FlashType"] = "error";
-            TempData["FlashMessage"] = error ?? "Erreur lors de la cr�ation.";
-            return Page();
-        }
+			[Required]
+			public string Role { get; set; } = "Personnel";
+		}
 
-        TempData["FlashType"] = "success";
-        TempData["FlashMessage"] = "Personnel ajout� avec succ�s.";
-        return RedirectToPage("/Personnel/Index", new { area = "Admin" });
-    }
+		public void OnGet()
+		{
+		}
+
+		public async Task<IActionResult> OnPostAsync()
+		{
+			if (ModelState.IsValid)
+			{
+				var user = new ApplicationUser
+				{
+					UserName = Input.Email,
+					Email = Input.Email,
+					NomComplet = Input.FullName, // On remplit ton champ personnalisé
+					EstActif = true,
+					EmailConfirmed = true
+				};
+
+				// Création de l'utilisateur avec le mot de passe saisi
+				var result = await _userManager.CreateAsync(user, Input.Password);
+
+				if (result.Succeeded)
+				{
+					// On lui donne son rôle (Admin ou Personnel)
+					await _userManager.AddToRoleAsync(user, Input.Role);
+
+					// Succès : retour à la liste
+					return RedirectToPage("Index");
+				}
+
+				// Si erreur (ex: mot de passe trop simple ou email pris)
+				foreach (var error in result.Errors)
+				{
+					ModelState.AddModelError(string.Empty, error.Description);
+				}
+			}
+
+			// Si on est là, c'est qu'il y a un problème, on réaffiche le formulaire
+			return Page();
+		}
+	}
 }

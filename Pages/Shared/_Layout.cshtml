@@ -15,10 +15,8 @@
         var isAdminArea = path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
     }
 
-    <!-- TOP NAV -->
     <header class="sticky top-0 z-40 border-b bg-white/80 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <!-- Brand -->
             <div class="flex items-center gap-3">
                 <a asp-area="" asp-page="/Index" class="text-lg font-semibold tracking-tight">
                     project_pharmacie
@@ -31,8 +29,7 @@
                 }
             </div>
 
-            <!-- Desktop nav -->
-            <nav class="hidden items-center gap-2 md:flex">
+            <nav class="hidden items-center gap-4 md:flex">
                 <a asp-area="" asp-page="/Index"
                    class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
                     Home
@@ -44,12 +41,15 @@
 
                 @if (isAdminArea)
                 {
-                    <div class="mx-2 h-6 w-px bg-zinc-200"></div>
+                    <div class="h-6 w-px bg-zinc-200"></div>
                     @await Html.PartialAsync("/Areas/Admin/Pages/Shared/_AdminNav.cshtml")
                 }
+
+                <div class="ml-2 pl-2 border-l border-zinc-200">
+                    <partial name="_LoginPartial" />
+                </div>
             </nav>
 
-            <!-- Mobile button -->
             <button id="navToggle"
                     class="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50 md:hidden"
                     type="button">
@@ -57,7 +57,6 @@
             </button>
         </div>
 
-        <!-- Mobile panel -->
         <div id="mobileNav" class="hidden border-t bg-white md:hidden">
             <div class="mx-auto max-w-6xl px-4 py-3">
                 <div class="flex flex-col gap-2">
@@ -84,17 +83,20 @@
                             </a>
                         </div>
                     }
+
+                    <div class="my-2 h-px bg-zinc-200"></div>
+                    <div class="py-2">
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- MAIN -->
     <main class="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         @RenderBody()
     </main>
 
-    <!-- FOOTER -->
     <footer class="mt-auto border-t bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-zinc-500">
             <span>&copy; @DateTime.Now.Year - project_pharmacie</span>

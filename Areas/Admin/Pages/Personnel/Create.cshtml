@@ -1,88 +1,79 @@
 ﻿@page
 @model project_pharmacie.Areas.Admin.Pages.Personnel.CreateModel
 @{
-    ViewData["Title"] = "Ajouter Personnel";
+    ViewData["Title"] = "Ajouter un personnel";
 }
 
-<div class="mx-auto max-w-3xl px-4 py-6">
-    <!-- Header -->
-    <div class="mb-6 flex items-start justify-between gap-3">
+<div class="mx-auto max-w-3xl py-8">
+    <div class="mb-8 flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-semibold tracking-tight">Ajouter un personnel</h1>
-            <p class="text-sm text-zinc-500">Créer un nouveau compte.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-zinc-900">Ajouter un personnel</h1>
+            <p class="mt-1 text-sm text-zinc-500">Créer un nouveau compte d'accès au système.</p>
         </div>
-
-        <a asp-area="Admin" asp-page="/Personnel/Index"
-           class="rounded-xl border bg-white px-4 py-2 text-sm hover:bg-zinc-50">
+        <a asp-page="Index" class="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900">
             ← Retour
         </a>
     </div>
 
-    <partial name="Shared/_Flash" />
+    <div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+        <form method="post" class="p-8 space-y-6">
 
-    <div class="rounded-2xl border bg-white p-5">
-        <form method="post" class="space-y-5">
+            <div asp-validation-summary="ModelOnly" class="rounded-lg bg-red-50 p-4 text-sm text-red-600 border border-red-100"></div>
+
             <div>
-                <label class="mb-1 block text-sm font-medium">Nom complet</label>
-                <input asp-for="Form.FullName" autocomplete="name"
-                       placeholder="Ex: Sara El Amrani"
-                       class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
-                <p class="mt-1 text-xs text-zinc-500">Nom affiché dans le tableau du personnel.</p>
-                <span asp-validation-for="Form.FullName" class="text-sm text-red-600"></span>
+                <label asp-for="Input.FullName" class="mb-1.5 block text-sm font-medium text-zinc-900">Nom complet</label>
+                <input asp-for="Input.FullName" class="block w-full rounded-xl border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-zinc-900" placeholder="Ex: Sara El Amrani" />
+                <span asp-validation-for="Input.FullName" class="mt-1 text-xs text-red-500"></span>
+                <p class="mt-1.5 text-xs text-zinc-400">Nom affiché dans le tableau du personnel.</p>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Email</label>
-                    <input asp-for="Form.Email" type="email" autocomplete="email"
-                           placeholder="ex: sara@pharmacie.ma"
-                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
-                    <p class="mt-1 text-xs text-zinc-500">Doit être unique.</p>
-                    <span asp-validation-for="Form.Email" class="text-sm text-red-600"></span>
+                    <label asp-for="Input.Email" class="mb-1.5 block text-sm font-medium text-zinc-900">Email</label>
+                    <input asp-for="Input.Email" class="block w-full rounded-xl border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-zinc-900" placeholder="sara@pharmacie.ma" />
+                    <span asp-validation-for="Input.Email" class="mt-1 text-xs text-red-500"></span>
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium">Téléphone (optionnel)</label>
-                    <input asp-for="Form.Phone" type="tel" autocomplete="tel"
-                           placeholder="Ex: 06 12 34 56 78"
-                           class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
-                    <p class="mt-1 text-xs text-zinc-500">Format libre (Maroc: 06/07…).</p>
+                    <label asp-for="Input.Password" class="mb-1.5 block text-sm font-medium text-zinc-900">Mot de passe</label>
+                    <input asp-for="Input.Password" type="text" class="block w-full rounded-xl border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-900 focus:ring-zinc-900" placeholder="Ex: 1234" />
+                    <span asp-validation-for="Input.Password" class="mt-1 text-xs text-red-500"></span>
                 </div>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <label class="mb-1 block text-sm font-medium">Rôle</label>
-                    <select asp-for="Form.Role" asp-items="Model.RoleOptions"
-                            class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200">
-                    </select>
-                    <p class="mt-1 text-xs text-zinc-500">Définit les permissions.</p>
-                </div>
+            <hr class="border-zinc-100" />
 
-                <div class="flex items-end justify-between rounded-2xl border bg-zinc-50 p-4">
-                    <div>
-                        <p class="text-sm font-medium">Compte actif</p>
-                        <p class="text-xs text-zinc-500">Désactive l’accès sans supprimer le compte.</p>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 items-center">
+                <div>
+                    <label asp-for="Input.Role" class="mb-1.5 block text-sm font-medium text-zinc-900">Rôle</label>
+                    <div class="relative">
+                        <select asp-for="Input.Role" class="block w-full appearance-none rounded-xl border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm text-zinc-900 focus:border-zinc-900 focus:ring-zinc-900">
+                            <option value="Personnel">Personnel (Vendeur)</option>
+                            <option value="Administrateur">Administrateur</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-zinc-500">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Switch simple -->
+                <div class="flex items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50/50 p-3">
+                    <span class="text-sm font-medium text-zinc-700">Compte actif</span>
                     <label class="relative inline-flex cursor-pointer items-center">
-                        <input asp-for="Form.IsActive" type="checkbox" class="peer sr-only" />
-                        <span class="h-6 w-11 rounded-full bg-zinc-300 peer-checked:bg-zinc-900 transition"></span>
-                        <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white peer-checked:translate-x-5 transition"></span>
+                        <input type="checkbox" checked disabled class="peer sr-only"> <div class="peer h-6 w-11 rounded-full bg-zinc-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-zinc-900 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-zinc-500/20"></div>
                     </label>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                <a asp-area="Admin" asp-page="/Personnel/Index"
-                   class="rounded-xl px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-50">
+            <div class="flex items-center justify-end gap-3 pt-4">
+                <a asp-page="Index" class="rounded-xl px-4 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50 transition-colors">
                     Annuler
                 </a>
-                <button class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+                <button type="submit" class="rounded-xl bg-zinc-900 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:ring-offset-2 transition-all">
                     Enregistrer
                 </button>
             </div>
+
         </form>
     </div>
 </div>

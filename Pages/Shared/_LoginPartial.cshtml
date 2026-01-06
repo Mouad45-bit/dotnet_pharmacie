@@ -1,0 +1,33 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using project_pharmacie.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<div class="flex items-center gap-4">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        // --- UTILISATEUR CONNECTÉ ---
+
+        // 1. Lien vers le profil (Affiche le nom ou un badge)
+        <a asp-area="Identity" asp-page="/Account/Manage/Index" class="text-gray-700 hover:text-blue-600 font-medium text-sm flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">COMPTE</span>
+            @User.Identity?.Name
+        </a>
+
+        // 2. Bouton Déconnexion
+        <form class="flex" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+            <button type="submit" class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">
+                Déconnexion
+            </button>
+        </form>
+    }
+    else
+    {
+        // --- UTILISATEUR NON CONNECTÉ ---
+
+        // Bouton de connexion style "Pill" sombre comme sur ton design
+        <a asp-area="Identity" asp-page="/Account/Login" class="bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2 px-4 rounded-full transition-all shadow-sm">
+            Se connecter
+        </a>
+    }
+</div>
