@@ -15,6 +15,7 @@ builder.Services.AddDbContext<PharmacieDbContext>(options =>
 builder.Services.AddScoped<IProduitService, ProduitService>();
 builder.Services.AddScoped<ICommandeService, CommandeService>();
 builder.Services.AddScoped<IVenteService, VenteService>();
+builder.Services.AddScoped<IPersonnelService, PersonnelService>();
 
 var app = builder.Build();
 
