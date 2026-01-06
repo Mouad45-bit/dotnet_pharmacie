@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
+using project_pharmacie.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +10,9 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 {
     public class HistoryModel : PageModel
     {
-        private readonly PharmacieDbContext _db;
+        private readonly IVenteService _venteService;
 
-        public HistoryModel(PharmacieDbContext db) => _db = db;
+        public HistoryModel(IVenteService venteService) => _venteService = venteService;
 
         [BindProperty(SupportsGet = true)]
         public string? Status { get; set; }
@@ -28,63 +27,27 @@ namespace project_pharmacie.Areas.Staff.Pages.Sales
 
         public async Task OnGetAsync()
         {
-            var query = _db.Ventes
-                .AsNoTracking()
-                .Include(v => v.Client)
-                .Include(v => v.Lignes)
-                    .ThenInclude(l => l.Produit)
-                .Include(v => v.Facture)
-                .AsQueryable();
+            var result = await _venteService.ListAsync(Query);
 
-            // Recherche client/produit
-            if (!string.IsNullOrWhiteSpace(Query))
+            if (!result.Success)
             {
-                var term = Query.Trim();
-
-                query = query.Where(v =>
-                    (v.Client != null && EF.Functions.Like(v.Client.Name, $"%{term}%"))
-                    ||
-                    v.Lignes.Any(l =>
-                        EF.Functions.Like(l.ProduitReference, $"%{term}%")
-                        || (l.Produit != null && EF.Functions.Like(l.Produit.Nom, $"%{term}%"))
-                    )
-                );
+                Sales = new();
+                TempData["FlashType"] = "error";
+                TempData["FlashMessage"] = result.Error ?? "Impossible de charger l'historique des ventes.";
+                return;
             }
 
-            var list = await query
-                .OrderByDescending(v => v.DateVente)
-                .ToListAsync();
-
-            Sales = list.Select(v =>
-            {
-                var status = v.Facture != null ? "PAID" : "PENDING";
-
-                var qty = v.Lignes.Sum(l => l.Quantite);
-                var total = v.Lignes.Sum(l => l.Quantite * l.PrixUnitaire);
-
-                var productLabel = "-";
-                if (v.Lignes.Count == 1)
-                {
-                    var l = v.Lignes.First();
-                    productLabel = l.Produit?.Nom ?? l.ProduitReference;
-                }
-                else if (v.Lignes.Count > 1)
-                {
-                    var first = v.Lignes.First();
-                    var firstName = first.Produit?.Nom ?? first.ProduitReference;
-                    productLabel = $"{firstName} (+{v.Lignes.Count - 1})";
-                }
-
-                return new SaleRow(
+            Sales = result.Data!
+                .Select(v => new SaleRow(
                     Id: v.Id,
-                    CustomerName: v.Client?.Name ?? "-",
-                    DrugName: productLabel,
-                    Quantity: qty,
-                    TotalPrice: total,
-                    Status: status,
-                    Date: v.DateVente
-                );
-            }).ToList();
+                    CustomerName: v.CustomerName,
+                    DrugName: v.DrugName,
+                    Quantity: v.Quantity,
+                    TotalPrice: v.TotalPrice,
+                    Status: v.Status,
+                    Date: v.Date
+                ))
+                .ToList();
 
             if (!string.IsNullOrWhiteSpace(StatusFilter))
             {
