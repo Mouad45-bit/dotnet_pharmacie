@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
+using project_pharmacie.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +10,9 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
 {
     public class HistoryModel : PageModel
     {
-        private readonly PharmacieDbContext _db;
+        private readonly ICommandeService _commandeService;
 
-        public HistoryModel(PharmacieDbContext db) => _db = db;
+        public HistoryModel(ICommandeService commandeService) => _commandeService = commandeService;
 
         [BindProperty(SupportsGet = true)]
         public string? Status { get; set; }
@@ -28,64 +27,31 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
 
         public async Task OnGetAsync()
         {
-            var query = _db.Commandes
-                .AsNoTracking()
-                .Include(c => c.Fournisseur)
-                .Include(c => c.Lignes)
-                    .ThenInclude(l => l.Produit)
-                .AsQueryable();
+            // Lecture via Service (pour centraliser)
+            var result = await _commandeService.ListAsync(Query);
 
-            // Recherche fournisseur/produit
-            if (!string.IsNullOrWhiteSpace(Query))
+            if (!result.Success)
             {
-                var term = Query.Trim();
-
-                query = query.Where(c =>
-                    (c.Fournisseur != null && EF.Functions.Like(c.Fournisseur.Nom, $"%{term}%"))
-                    ||
-                    c.Lignes.Any(l =>
-                        EF.Functions.Like(l.ProduitReference, $"%{term}%")
-                        || (l.Produit != null && EF.Functions.Like(l.Produit.Nom, $"%{term}%"))
-                    )
-                );
+                Rows = new();
+                TempData["FlashType"] = "error";
+                TempData["FlashMessage"] = result.Error ?? "Impossible de charger l'historique.";
+                return;
             }
 
-            var list = await query
-                .OrderByDescending(c => c.Date)
-                .ToListAsync();
+            Rows = result.Data!
+                .Select(o => new OrderRow(
+                    Id: o.Id,
+                    SupplierId: o.SupplierId,
+                    SupplierName: o.SupplierName,
+                    ProductName: o.ProductName,
+                    Quantity: o.Quantity,
+                    Status: ApplyDerivedStatus(o.CreatedAt),
+                    CreatedAt: o.CreatedAt,
+                    Total: o.Total
+                ))
+                .ToList();
 
-            Rows = list.Select(c =>
-            {
-                var status = DeriveStatus(c.Date);
-
-                var qty = c.Lignes.Sum(l => l.Quantite);
-
-                var productLabel = "-";
-                if (c.Lignes.Count == 1)
-                {
-                    var l = c.Lignes.First();
-                    productLabel = l.Produit?.Nom ?? l.ProduitReference;
-                }
-                else if (c.Lignes.Count > 1)
-                {
-                    var first = c.Lignes.First();
-                    var firstName = first.Produit?.Nom ?? first.ProduitReference;
-                    productLabel = $"{firstName} (+{c.Lignes.Count - 1})";
-                }
-
-                return new OrderRow(
-                    Id: c.Id,
-                    SupplierId: c.FournisseurId,
-                    SupplierName: c.Fournisseur?.Nom ?? "-",
-                    ProductName: productLabel,
-                    Quantity: qty,
-                    Status: status,
-                    CreatedAt: c.Date,
-                    Total: c.PrixTotal
-                );
-            }).ToList();
-
-            // Filtre statut (statut dérivé car pas de colonne Status en DB)
+            // Filtre statut (statut dérivé)
             if (!string.IsNullOrWhiteSpace(StatusFilter))
             {
                 Rows = Rows
@@ -94,12 +60,11 @@ namespace project_pharmacie.Areas.Staff.Pages.Orders
             }
         }
 
-        // Statut “simulé” sans changer le schéma :
-        // - < 36h : PENDING
-        // - sinon : DELIVERED
-        private static string DeriveStatus(DateTime date)
+        // Ici on garde la logique de statut “simulé” côté UI,
+        // car on n’a pas de colonne Status en DB.
+        private static string ApplyDerivedStatus(DateTime createdAt)
         {
-            var age = DateTime.Now - date;
+            var age = DateTime.Now - createdAt;
             return age.TotalHours < 36 ? "PENDING" : "DELIVERED";
         }
 
