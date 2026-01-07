@@ -51,7 +51,7 @@ public class RegisterModel : PageModel
         await _userManager.AddToRoleAsync(user, IdentitySeeder.PersonnelRole);
 
         await _signInManager.SignInAsync(user, isPersistent: false);
-        return Redirect("/Staff");
+        return RedirectToPage("/Dashboard/Index", new { area = "Staff" });
     }
 
     public class InputModel
