@@ -9,9 +9,13 @@ namespace project_pharmacie.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public LoginModel(SignInManager<ApplicationUser> signInManager)
-        => _signInManager = signInManager;
+    public LoginModel(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager)
+    {
+        _signInManager = signInManager;
+        _userManager = userManager;
+    }
 
     [BindProperty]
     public InputModel Input { get; set; } = new();
@@ -34,10 +38,19 @@ public class LoginModel : PageModel
             return Page();
         }
 
+        // 1) Si on a un returnUrl valide, on le respecte
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return LocalRedirect(returnUrl);
 
-        return Redirect("/Staff");
+        // 2) Sinon on redirige selon le rôle
+        var user =
+            await _userManager.FindByNameAsync(Input.Login)
+            ?? await _userManager.FindByEmailAsync(Input.Login);
+
+        if (user is not null && await _userManager.IsInRoleAsync(user, "Admin"))
+            return RedirectToPage("/Personnel/Index", new { area = "Admin" });
+
+        return RedirectToPage("/Dashboard/Index", new { area = "Staff" });
     }
 
     public class InputModel
