@@ -6,7 +6,6 @@ public static class DbSeeder
 {
     public static void Seed(PharmacieDbContext db)
     {
-        // ✅ Avec Identity : plus de db.Utilisateurs / Administrateur / Personnel dans ce seeder
         // Si déjà seedé, on ne refait pas (évite doublons)
         if (db.Clients.Any() || db.Produits.Any() || db.Fournisseurs.Any() || db.Commandes.Any() || db.Ventes.Any())
             return;
@@ -61,7 +60,7 @@ public static class DbSeeder
 
         // -----------------------------
         // 3) Produits (120)
-        //    ✅ Avec Identity: Produit.PersonnelId est string? (ApplicationUser.Id) => on laisse null ici
+        //    Avec Identity: Produit.PersonnelId est string? (ApplicationUser.Id) => on laisse null ici
         // -----------------------------
         var catalog = new (string Nom, decimal PrixMin, decimal PrixMax)[]
         {
@@ -105,7 +104,7 @@ public static class DbSeeder
                 Quantite = stock,
                 DatePeremption = peremption,
 
-                // ✅ Identity: on ne lie pas à un user dans le seed (optionnel)
+                // Identity: on ne lie pas à un user dans le seed (optionnel)
                 PersonnelId = null
             });
         }
@@ -137,7 +136,7 @@ public static class DbSeeder
 
         // -----------------------------
         // 5) Commandes (40) + lignes (3 à 10)
-        //    ✅ Commande.PersonnelId (Identity user) => null dans seed
+        //    Commande.PersonnelId (Identity user) => null dans seed
         // -----------------------------
         var commandes = new List<Commande>();
 
@@ -150,7 +149,7 @@ public static class DbSeeder
                 Date = DateTime.Today.AddDays(-rng.Next(0, 90)),
                 Note = Math.Round(3.5 + rng.NextDouble() * 1.5, 1),
                 FournisseurId = f.Id,
-                PersonnelId = null // ✅ Identity user id (optionnel)
+                PersonnelId = null // Identity user id (optionnel)
             };
 
             var lignesCount = rng.Next(3, 11);
