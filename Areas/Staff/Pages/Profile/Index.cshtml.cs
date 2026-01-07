@@ -1,90 +1,105 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using project_pharmacie.Data;
+using project_pharmacie.Models;
 
-namespace project_pharmacie.Areas.Staff.Pages.Profile
+namespace project_pharmacie.Areas.Staff.Pages.Profile;
+
+[Authorize(Roles = "ADMIN,PERSONNEL")]
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
+    private readonly UserManager<ApplicationUser> _users;
+
+    public IndexModel(UserManager<ApplicationUser> users)
+        => _users = users;
+
+    public bool Found { get; private set; }
+
+    public string Username { get; private set; } = "";
+    public string Role { get; private set; } = "";
+    public string Email { get; private set; } = "";
+    public string EmployeeId { get; private set; } = "";
+
+    [BindProperty]
+    public string? CurrentPassword { get; set; }
+
+    [BindProperty]
+    public string? NewPassword { get; set; }
+
+    [TempData]
+    public string? Message { get; set; }
+
+    public async Task OnGetAsync()
     {
-        private readonly PharmacieDbContext _db;
+        await LoadUserAsync();
+    }
 
-        public IndexModel(PharmacieDbContext db) => _db = db;
-
-        public bool Found { get; private set; }
-
-        public string Username { get; private set; } = "";
-        public string Role { get; private set; } = "";
-        public string Email { get; private set; } = "";      // ici on affiche Login (car pas de champ Email)
-        public string EmployeeId { get; private set; } = "";  // ici on affiche l'Id DB
-
-        [BindProperty]
-        public string? CurrentPassword { get; set; }
-
-        [BindProperty]
-        public string? NewPassword { get; set; }
-
-        [TempData]
-        public string? Message { get; set; }
-
-        public async Task OnGetAsync()
+    public async Task<IActionResult> OnPostAsync()
+    {
+        var user = await _users.GetUserAsync(User);
+        if (user is null)
         {
-            await LoadUserFromDbAsync();
-        }
-
-        public async Task<IActionResult> OnPostAsync()
-        {
-            // Tant qu'on n'a pas d'auth réelle (session/Identity),
-            // on ne change PAS le mot de passe en DB.
-            if (!string.IsNullOrWhiteSpace(NewPassword))
-            {
-                Message = "Modification du mot de passe désactivée tant que l’authentification n’est pas en place.";
-            }
-
-            await LoadUserFromDbAsync();
+            Found = false;
+            Message = "Utilisateur introuvable ou non connecté.";
             return Page();
         }
 
-        private async Task LoadUserFromDbAsync()
+        // Si aucun champ password => juste reload infos
+        if (string.IsNullOrWhiteSpace(CurrentPassword) && string.IsNullOrWhiteSpace(NewPassword))
         {
-            // 1) Essayer Personnel
-            var p = await _db.Personnels
-                .AsNoTracking()
-                .OrderBy(x => x.Nom)
-                .FirstOrDefaultAsync();
+            await LoadUserAsync(user);
+            return Page();
+        }
 
-            if (p is not null)
-            {
-                Found = true;
-                Username = p.Nom;
-                Role = p.Role;
-                Email = p.Login;      // on garde "Email" côté UI pour éviter de modifier le cshtml
-                EmployeeId = p.Id;
-                return;
-            }
+        if (string.IsNullOrWhiteSpace(CurrentPassword) || string.IsNullOrWhiteSpace(NewPassword))
+        {
+            Message = "Veuillez remplir l’ancien et le nouveau mot de passe.";
+            await LoadUserAsync(user);
+            return Page();
+        }
 
-            // 2) Sinon essayer Administrateur
-            var a = await _db.Administrateurs
-                .AsNoTracking()
-                .OrderBy(x => x.Nom)
-                .FirstOrDefaultAsync();
+        var res = await _users.ChangePasswordAsync(user, CurrentPassword, NewPassword);
 
-            if (a is not null)
-            {
-                Found = true;
-                Username = a.Nom;
-                Role = a.Role;
-                Email = a.Login;
-                EmployeeId = a.Id;
-                return;
-            }
+        if (!res.Succeeded)
+        {
+            Message = string.Join(" | ", res.Errors.Select(e => e.Description));
+            await LoadUserAsync(user);
+            return Page();
+        }
 
-            // 3) Aucun user trouvé
+        Message = "Mot de passe modifié avec succès.";
+        CurrentPassword = null;
+        NewPassword = null;
+
+        await LoadUserAsync(user);
+        return Page();
+    }
+
+    private async Task LoadUserAsync(ApplicationUser? user = null)
+    {
+        user ??= await _users.GetUserAsync(User);
+
+        if (user is null)
+        {
             Found = false;
             Username = "";
             Role = "";
             Email = "";
             EmployeeId = "";
+            return;
         }
+
+        Found = true;
+
+        Username = string.IsNullOrWhiteSpace(user.Nom)
+            ? (user.UserName ?? "")
+            : user.Nom;
+
+        Email = user.Email ?? (user.UserName ?? "");
+        EmployeeId = user.Id;
+
+        var roles = await _users.GetRolesAsync(user);
+        Role = roles.FirstOrDefault(r => r is "ADMIN" or "PERSONNEL") ?? "PERSONNEL";
     }
 }
