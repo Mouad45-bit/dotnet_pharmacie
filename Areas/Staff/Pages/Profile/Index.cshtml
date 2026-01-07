@@ -23,7 +23,7 @@
     {
         <div class="rounded-2xl border bg-white p-6">
             <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                Aucun utilisateur trouvé dans la base (Personnel / Administrateur).
+                Utilisateur introuvable ou non connecté.
             </div>
         </div>
     }
@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="rounded-xl border bg-zinc-50 p-4">
-                    <p class="text-xs text-zinc-500">Login</p>
+                    <p class="text-xs text-zinc-500">Login / Email</p>
                     <p class="mt-1 text-sm font-semibold">@Model.Email</p>
                 </div>
 
@@ -55,29 +55,29 @@
             <div class="mt-5 rounded-xl border bg-white p-4">
                 <h2 class="text-sm font-semibold text-zinc-900">Sécurité du compte</h2>
                 <p class="mt-1 text-xs text-zinc-500">
-                    Changement de mot de passe indisponible tant que l’authentification (session/Identity) n’est pas en place.
+                    Vous pouvez changer votre mot de passe en saisissant l’ancien et le nouveau.
                 </p>
 
                 <form method="post" class="mt-4 space-y-5">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label class="mb-1 block text-sm font-medium">Mot de passe actuel</label>
-                            <input asp-for="CurrentPassword" type="password" disabled
-                                   class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200 bg-zinc-50 text-zinc-400" />
+                            <input asp-for="CurrentPassword" type="password" autocomplete="current-password"
+                                   class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
                             <span asp-validation-for="CurrentPassword" class="text-sm text-red-600"></span>
                         </div>
 
                         <div>
                             <label class="mb-1 block text-sm font-medium">Nouveau mot de passe</label>
-                            <input asp-for="NewPassword" type="password" disabled
-                                   class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200 bg-zinc-50 text-zinc-400" />
+                            <input asp-for="NewPassword" type="password" autocomplete="new-password"
+                                   class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
                             <span asp-validation-for="NewPassword" class="text-sm text-red-600"></span>
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                        <button type="submit" disabled
-                                class="rounded-xl bg-zinc-300 px-4 py-2 text-sm font-medium text-white cursor-not-allowed">
+                        <button type="submit"
+                                class="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
                             Mettre à jour
                         </button>
                     </div>
