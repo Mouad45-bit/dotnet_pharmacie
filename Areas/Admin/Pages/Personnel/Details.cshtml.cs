@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using project_pharmacie.Models;
 using project_pharmacie.Services;
 
 namespace project_pharmacie.Areas.Admin.Pages.Personnel;
 
+[Authorize(Roles = "ADMIN")]
 public class DetailsModel : PageModel
 {
     private readonly IPersonnelService _service;
@@ -21,17 +22,5 @@ public class DetailsModel : PageModel
     {
         Item = await _service.GetAsync(Id);
         Found = Item is not null;
-    }
-
-    public async Task<IActionResult> OnPostDeleteAsync(string id)
-    {
-        var res = await _service.DeleteAsync(id);
-
-        TempData["FlashType"] = res.Success ? "success" : "error";
-        TempData["FlashMessage"] = res.Success
-            ? "Personnel supprimé avec succès."
-            : (res.Error ?? "Erreur lors de la suppression.");
-
-        return RedirectToPage("/Personnel/Index", new { area = "Admin" });
     }
 }
