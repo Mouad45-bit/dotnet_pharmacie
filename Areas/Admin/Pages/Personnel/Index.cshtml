@@ -31,7 +31,7 @@
             <div class="flex-1">
                 <label class="mb-1 block text-xs font-medium text-zinc-600">Recherche</label>
                 <input name="q" value="@Model.Q"
-                       placeholder="Nom, login…"
+                       placeholder="Nom, login, email…"
                        class="w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-200" />
             </div>
 
@@ -97,15 +97,10 @@
                                         Modifier
                                     </a>
 
-                                    <form method="post" asp-page-handler="Delete" class="inline">
-                                        <input type="hidden" name="id" value="@p.Id" />
-                                        <input type="hidden" name="q" value="@Model.Q" />
-                                        <button type="submit"
-                                                class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100"
-                                                onclick="return confirm('Confirmer la suppression de @p.Nom ?');">
-                                            Supprimer
-                                        </button>
-                                    </form>
+                                    <a asp-area="Admin" asp-page="/Personnel/Delete" asp-route-id="@p.Id" asp-route-q="@Model.Q"
+                                       class="rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 hover:bg-red-100">
+                                        Supprimer
+                                    </a>
                                 </div>
                             </td>
                         </tr>
