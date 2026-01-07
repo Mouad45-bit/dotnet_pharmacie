@@ -64,14 +64,10 @@
                     Modifier
                 </a>
 
-                <form method="post" asp-page-handler="Delete" class="inline">
-                    <input type="hidden" name="id" value="@Model.Item.Id" />
-                    <button type="submit"
-                            class="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
-                            onclick="return confirm('Confirmer la suppression de @Model.Item.Nom ?');">
-                        Supprimer
-                    </button>
-                </form>
+                <a asp-area="Admin" asp-page="/Personnel/Delete" asp-route-id="@Model.Item.Id"
+                   class="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100">
+                    Supprimer
+                </a>
             </div>
         </div>
     }
