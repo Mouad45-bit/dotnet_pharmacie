@@ -1,15 +1,26 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using project_pharmacie.Models;
 
 namespace project_pharmacie.Areas.Admin.Pages.Profile;
 
 public class IndexModel : PageModel
 {
-    public string AdminName { get; private set; } = "Admin Demo";
-    public string AdminEmail { get; private set; } = "admin@pharmacie.local";
-    public string LastLogin { get; private set; } = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public void OnGet()
+    public IndexModel(UserManager<ApplicationUser> userManager)
+        => _userManager = userManager;
+
+    public string AdminName { get; private set; } = "";
+    public string AdminEmail { get; private set; } = "";
+    public string LastLogin { get; private set; } = "";
+
+    public async Task OnGetAsync()
     {
-        // Plus tard : lire depuis User.Claims / Identity
+        var user = await _userManager.GetUserAsync(User);
+
+        AdminName = user?.UserName ?? "Admin";
+        AdminEmail = user?.Email ?? "";
+        LastLogin = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
     }
 }
