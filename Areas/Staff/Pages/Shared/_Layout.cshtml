@@ -13,7 +13,8 @@
 <body class="min-h-screen bg-zinc-50 text-zinc-900 flex flex-col">
     @{
         var path = Context.Request.Path.Value ?? "";
-        var isStaffArea = path.StartsWith("/Staff", StringComparison.OrdinalIgnoreCase);
+        bool Active(string startsWith) =>
+        path.StartsWith(startsWith, StringComparison.OrdinalIgnoreCase);
     }
 
     <!-- TOP NAV -->
@@ -21,34 +22,68 @@
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
             <!-- Brand -->
             <div class="flex items-center gap-3">
-                <a asp-area="" asp-page="/Index" class="text-lg font-semibold tracking-tight">
-                    project_pharmacie
-                </a>
+                <span class="text-lg font-semibold uppercase tracking-tight select-none">
+                    pharmacie
+                </span>
 
-                @if (isStaffArea)
-                {
-                    <span class="rounded-full border bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-700">
-                        Staff
-                    </span>
-                }
+                <span class="rounded-full border bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-700">
+                    Staff
+                </span>
             </div>
 
-            <!-- Desktop nav -->
+            <!-- Desktop nav (STAFF only) -->
             <nav class="hidden items-center gap-2 md:flex">
-                <a asp-area="" asp-page="/Index"
-                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                    Home
+                <a asp-area="Staff" asp-page="/Dashboard/Index"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Dashboard") ? "bg-zinc-100" : "")">
+                    Dashboard
                 </a>
 
-                <a asp-area="" asp-page="/Privacy"
-                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                    Privacy
+                <a asp-area="Staff" asp-page="/Clients/Index"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Clients") ? "bg-zinc-100" : "")">
+                    Clients
                 </a>
 
-                @if (isStaffArea)
-                {
-                    <div class="mx-2 h-6 w-px bg-zinc-200"></div>
+                <a asp-area="Staff" asp-page="/Products/Index"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Products") ? "bg-zinc-100" : "")">
+                    Produits
+                </a>
 
+                <a asp-area="Staff" asp-page="/Orders/History"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Orders") ? "bg-zinc-100" : "")">
+                    Commandes
+                </a>
+
+                <a asp-area="Staff" asp-page="/Sales/History"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Sales") ? "bg-zinc-100" : "")">
+                    Ventes
+                </a>
+
+                <a asp-area="Staff" asp-page="/Profile/Index"
+                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 @(Active("/Staff/Profile") ? "bg-zinc-100" : "")">
+                    Profil
+                </a>
+
+                <form asp-area="" asp-page="/Account/Logout" method="post" class="ml-2 inline">
+                    <button type="submit"
+                            class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 text-red-600 hover:text-red-700">
+                        Déconnexion
+                    </button>
+                </form>
+
+            </nav>
+
+            <!-- Mobile button -->
+            <button id="navToggle"
+                    class="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50 md:hidden"
+                    type="button">
+                Menu
+            </button>
+        </div>
+
+        <!-- Mobile panel (STAFF only) -->
+        <div id="mobileNav" class="hidden border-t bg-white md:hidden">
+            <div class="mx-auto max-w-6xl px-4 py-3">
+                <div class="flex flex-col gap-2">
                     <a asp-area="Staff" asp-page="/Dashboard/Index"
                        class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
                         Dashboard
@@ -78,67 +113,16 @@
                        class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
                         Profil
                     </a>
-                }
-            </nav>
 
-            <!-- Mobile button -->
-            <button id="navToggle"
-                    class="inline-flex items-center justify-center rounded-xl border bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50 md:hidden"
-                    type="button">
-                Menu
-            </button>
-        </div>
+                    <div class="my-2 h-px bg-zinc-200"></div>
 
-        <!-- Mobile panel -->
-        <div id="mobileNav" class="hidden border-t bg-white md:hidden">
-            <div class="mx-auto max-w-6xl px-4 py-3">
-                <div class="flex flex-col gap-2">
-                    <a asp-area="" asp-page="/Index"
-                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                        Home
-                    </a>
+                    <form asp-area="" asp-page="/Account/Logout" method="post" class="ml-2 inline">
+                        <button type="submit"
+                                class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 text-red-600 hover:text-red-700">
+                            Déconnexion
+                        </button>
+                    </form>
 
-                    <a asp-area="" asp-page="/Privacy"
-                       class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                        Privacy
-                    </a>
-
-                    @if (isStaffArea)
-                    {
-                        <div class="my-2 h-px bg-zinc-200"></div>
-
-                        <div class="flex flex-col gap-2">
-                            <a asp-area="Staff" asp-page="/Dashboard/Index"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Dashboard
-                            </a>
-
-                            <a asp-area="Staff" asp-page="/Clients/Index"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Clients
-                            </a>
-
-                            <a asp-area="Staff" asp-page="/Products/Index"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Produits
-                            </a>
-
-                            <a asp-area="Staff" asp-page="/Orders/History"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Commandes
-                            </a>
-
-                            <a asp-area="Staff" asp-page="/Sales/History"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Ventes
-                            </a>
-
-                            <a asp-area="Staff" asp-page="/Profile/Index"
-                               class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                                Profil
-                            </a>
-                        </div>
-                    }
                 </div>
             </div>
         </div>
@@ -152,7 +136,7 @@
     <!-- FOOTER -->
     <footer class="mt-auto border-t bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-zinc-500">
-            <span>&copy; @DateTime.Now.Year - project_pharmacie</span>
+            <span>&copy; @DateTime.Now.Year - Pharmacie</span>
             <a asp-area="" asp-page="/Privacy" class="hover:text-zinc-700">Privacy</a>
         </div>
     </footer>

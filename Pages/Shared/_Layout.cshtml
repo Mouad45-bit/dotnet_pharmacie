@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@* Areas/Staff/Pages/Shared/_Layout.cshtml *@
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
@@ -13,6 +14,10 @@
     @{
         var path = Context.Request.Path.Value ?? "";
         var isAdminArea = path.StartsWith("/Admin", StringComparison.OrdinalIgnoreCase);
+
+        // ✅ Ne pas afficher "Déconnexion" si non connecté OU si on est sur /Account/*
+        var isAccountPage = path.StartsWith("/Account", StringComparison.OrdinalIgnoreCase);
+        var showLogout = (User?.Identity?.IsAuthenticated == true) && !isAccountPage;
     }
 
     <!-- TOP NAV -->
@@ -20,9 +25,10 @@
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
             <!-- Brand -->
             <div class="flex items-center gap-3">
-                <a asp-area="" asp-page="/Index" class="text-lg font-semibold tracking-tight">
-                    project_pharmacie
-                </a>
+                <span class="text-lg font-semibold uppercase tracking-tight select-none">
+                    pharmacie
+                </span>
+
                 @if (isAdminArea)
                 {
                     <span class="rounded-full border bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-700">
@@ -33,19 +39,20 @@
 
             <!-- Desktop nav -->
             <nav class="hidden items-center gap-2 md:flex">
-                <a asp-area="" asp-page="/Index"
-                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                    Home
-                </a>
-                <a asp-area="" asp-page="/Privacy"
-                   class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100">
-                    Privacy
-                </a>
-
                 @if (isAdminArea)
                 {
                     <div class="mx-2 h-6 w-px bg-zinc-200"></div>
                     @await Html.PartialAsync("/Areas/Admin/Pages/Shared/_AdminNav.cshtml")
+                }
+
+                @if (showLogout)
+                {
+                    <form asp-area="" asp-page="/Account/Logout" method="post" class="ml-2 inline">
+                        <button type="submit"
+                                class="rounded-xl px-3 py-2 text-sm font-medium hover:bg-zinc-100 text-red-600 hover:text-red-700">
+                            Déconnexion
+                        </button>
+                    </form>
                 }
             </nav>
 
@@ -84,6 +91,18 @@
                             </a>
                         </div>
                     }
+
+                    @if (showLogout)
+                    {
+                        <div class="my-2 h-px bg-zinc-200"></div>
+
+                        <form asp-area="" asp-page="/Account/Logout" method="post">
+                            <button type="submit"
+                                    class="w-full rounded-xl px-3 py-2 text-left text-sm font-medium hover:bg-zinc-100 text-red-600 hover:text-red-700">
+                                Déconnexion
+                            </button>
+                        </form>
+                    }
                 </div>
             </div>
         </div>
@@ -97,7 +116,7 @@
     <!-- FOOTER -->
     <footer class="mt-auto border-t bg-white">
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-6 text-sm text-zinc-500">
-            <span>&copy; @DateTime.Now.Year - project_pharmacie</span>
+            <span>&copy; @DateTime.Now.Year - Pharmacie</span>
             <a asp-area="" asp-page="/Privacy" class="hover:text-zinc-700">Privacy</a>
         </div>
     </footer>

@@ -13,7 +13,6 @@ builder.Services.AddDbContext<PharmacieDbContext>(options =>
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
-        // Dev-friendly (tu peux durcir après)
         options.Password.RequireNonAlphanumeric = false;
         options.Password.RequireUppercase = true;
         options.Password.RequireLowercase = true;
@@ -25,6 +24,7 @@ builder.Services
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
+    // tes pages custom (pas Identity UI)
     opt.LoginPath = "/Account/Login";
     opt.AccessDeniedPath = "/Account/AccessDenied";
 });
@@ -36,11 +36,17 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Staff", p => p.RequireRole(IdentitySeeder.AdminRole, IdentitySeeder.PersonnelRole));
 });
 
-// Razor Pages + protection par zones
+// Razor Pages + protection
 builder.Services.AddRazorPages(options =>
 {
     options.Conventions.AuthorizeAreaFolder("Admin", "/", "AdminOnly");
     options.Conventions.AuthorizeAreaFolder("Staff", "/", "Staff");
+
+    // ✅ pages publiques
+    options.Conventions.AllowAnonymousToPage("/Index");
+    options.Conventions.AllowAnonymousToPage("/Privacy");
+
+    // ✅ dossier account public (login/logout/denied)
     options.Conventions.AllowAnonymousToFolder("/Account");
 });
 
@@ -62,7 +68,7 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 
     await IdentitySeeder.SeedAsync(services);
-    DbSeeder.Seed(db); // ton seed DOMAIN (sans users)
+    DbSeeder.Seed(db);
 }
 
 if (!app.Environment.IsDevelopment())
